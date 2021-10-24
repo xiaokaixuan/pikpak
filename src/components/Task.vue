@@ -91,7 +91,7 @@ import { CircleX } from '@vicons/tabler'
         }
       })
   }
-  const deleteTask = (key) => {
+  const deleteTask = (key:number) => {
     http.delete('https://api-drive.mypikpak.com/drive/v1/tasks', {
       params: {
         task_ids: filesList.value[key].id,
