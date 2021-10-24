@@ -1,0 +1,321 @@
+<template>
+  <div class="list-page list-page-files">
+    <div class="header">
+      <div class="title n-ellipsis">
+        <n-breadcrumb separator=">">
+          <n-breadcrumb-item>
+            <router-link to="/list">文件</router-link>
+          </n-breadcrumb-item>
+          <n-breadcrumb-item v-if="parentInfo && parentInfo.name">
+            {{parentInfo.name}}
+          </n-breadcrumb-item>
+        </n-breadcrumb>
+      </div>
+      <div class="action" @click="showAddUrl = true">
+        <n-icon :color="themeVars.primaryColor">
+          <circle-plus></circle-plus>
+        </n-icon>
+      </div>
+    </div>
+    <n-data-table :data="filesList" size="small" :columns="columns" :loading="loading" :bordered="false"></n-data-table>
+    <task-vue ref="taskRef"></task-vue>
+    <n-modal v-model:show="showAddUrl">
+      <n-card style="width: 600px;" title="添加链接">
+        <template #header-extra>
+          <n-icon @click="showAddUrl = false">
+            <circle-x></circle-x>
+          </n-icon>
+        </template>
+        <n-input type="textarea" :rows="6" placeholder="支持Magent，换行添加多个" v-model:value="newUrl"></n-input>
+        <template #action>
+          <n-button :block="true" type="primary" :disabled="!newUrl" @click="addUrl">添加</n-button>
+        </template>
+      </n-card>
+    </n-modal>
+    <n-modal v-model:show="showVideo">
+      <n-card style="width: 100vw; height: 100vh;" :title="fileInfo ? fileInfo.name : '视频'">
+        <template #header-extra>
+          <n-icon @click="showVideo = false">
+            <circle-x></circle-x>
+          </n-icon>
+        </template>
+        <div style="width: 100%; height: 100%">
+          <!-- <Video :src="fileInfo.web_content_link" :type="fileInfo.mime_type"></Video> -->
+          <plyr-vue :video="fileInfo"></plyr-vue>
+        </div>
+      </n-card>
+    </n-modal>
+    
+    <n-modal v-model:show="showImage">
+      <n-card style="width: 100vw; height: 100vh;" :title="fileInfo ? fileInfo.name : '图片'">
+        <template #header-extra>
+          <n-icon @click="showImage = false">
+            <circle-x></circle-x>
+          </n-icon>
+        </template>
+        <div style="width: 100%; height: calc(100vh - 80px);text-align: center;">
+          <img :src="fileInfo?.web_content_link" style="max-width: 100%; max-height: 100%">
+        </div>
+      </n-card>
+    </n-modal>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from '@vue/reactivity';
+import { h, nextTick, onMounted, watch } from '@vue/runtime-core'
+import http from '../utils/axios'
+import { useRoute, useRouter } from 'vue-router'
+import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NText, NPopconfirm } from 'naive-ui'
+import { CirclePlus, CircleX } from '@vicons/tabler'
+import { byteConvert } from '../utils'
+import PlyrVue from '../components/Plyr.vue'
+import TaskVue from '../components/Task.vue'
+
+  const filesList = ref()
+  const route = useRoute()
+  const router = useRouter()
+  interface FileInfo {
+    kind: string,
+    mine_type: string,
+    id: string,
+    thumbnail_link: string,
+    icon_link: string,
+    name: string
+  }
+  const themeVars = useThemeVars()
+  const columns = ref<DataTableColumns>([
+    {
+      title: '名称',
+      key: 'name',
+      sorter: 'default',
+      render: (row:any) => {
+        return h('div', {
+          class: 'file-info',
+          onClick: () => {
+            if(row.kind === 'drive#folder') {
+              router.push('/list/' + row.id)
+            } else if(row.mime_type.indexOf('video') != -1 || row.mime_type.indexOf('image') != -1) {
+              getFile(row.id)
+                .then(res => {
+                  fileInfo.value = res.data
+                  if(fileInfo.value.web_content_link) {
+                    if(row.mime_type.indexOf('video') != -1) {
+                      showVideo.value = true
+                    } else {
+                      showImage.value = true
+                    }
+                  }
+                })
+            }
+          }
+        }, [
+          h('img', {
+            src: row.thumbnail_link || row.icon_link
+          }),
+          h(NEllipsis, {
+              class: 'title',
+            },
+            {
+              default: () => String(row.name)
+            }
+          ),
+          h('span', {
+            class: 'action'
+          }, '1')
+        ])
+      }
+    },
+    {
+      title: '修改时间',
+      key: 'modified_time',
+      sorter: 'default',
+      align: 'right',
+      render: (row) => {
+        return h(NTime, {
+          time: new Date(String(row.modified_time) || ''),
+          format: 'MM-dd hh:mm',
+        })
+      },
+      className: 'modified_time',
+      width: 160
+    },
+    {
+      title: '大小',
+      key: 'size',
+      sorter: 'default',
+      align: 'right',
+      render: (row) => Number(row.size) > 0 ? byteConvert(Number(row.size)) : '',
+      className: 'size',
+      width: 160
+    },
+    {
+      title: '',
+      key: 'action',
+      width: 60,
+      align: 'right',
+      render: (row:any) => {
+        return h('div', {}, [
+          h(NPopconfirm, {
+            placement: 'right',
+            onPositiveClick: () => {
+              deleteFile(row.id)
+            }
+          }, {
+            trigger: () => {
+              return h(NText, {
+                type: 'primary',
+              }, {
+                default: () => '删除'
+              })
+            },
+            default: () => '确定删除文件吗？'
+          })
+        ])
+      }
+    }
+  ])
+  const loading = ref(false)
+  const getFileList = () => {
+    loading.value = true
+    http.get('https://api-drive.mypikpak.com/drive/v1/files', {
+      params: {
+        parent_id: route.params.id,
+        thumbnail_size: 'SIZE_LARGE',
+        with_audit: true,
+        filters: {
+          "phase": {"eq": "PHASE_TYPE_COMPLETE"},
+          "trashed":{"eq":false}
+        }
+      }
+    })
+      .then((res:any) => {
+        const {data} = res
+        filesList.value = data.files
+      })
+      .finally(() => {
+        loading.value = false
+      })
+  }
+  const initPage = () => {
+    getFileList()
+    parentInfo.value = {}
+    if(route.params.id) {
+      getFile(String(route.params.id))
+        .then(res => {
+          parentInfo.value = res.data
+        })
+    }
+    nextTick(() => {
+      console.log(taskRef.value)
+    })
+  }
+  watch(route, () => {
+    initPage()
+  })
+  const parentInfo = ref()
+  onMounted(initPage)
+  const fileInfo = ref()
+  const getFile = (id:string) => {
+    return http.get('https://api-drive.mypikpak.com/drive/v1/files/' + id, {
+      params: {
+        _magic: '2021',
+        thumbnail_size: 'SIZE_LARGE'
+      }
+    })
+      .then(res => {
+        return res
+      })
+  }
+  const showVideo = ref(false)
+  const showImage = ref(false)
+  const showAddUrl = ref(false)
+  const newUrl = ref()
+  const taskRef = ref()
+  const addUrl = () => {
+    const urlList = newUrl.value.split('\n')
+    urlList.forEach((url:string) => {
+      http.post('https://api-drive.mypikpak.com/drive/v1/files', {
+        kind: "drive#file",
+        name: "",
+        upload_type: "UPLOAD_TYPE_URL",
+        url: {
+          url: url
+        },
+        params: {"from":"file"},
+        folder_type: "DOWNLOAD"
+      })
+        .then(res => {
+          console.log(res)
+          window.$message.success('添加成功')
+          showAddUrl.value = false
+          taskRef.value.getTask()
+        })
+    })
+  }
+  const deleteFile = (id:string | string[]) => {
+    http.post('https://api-drive.mypikpak.com/drive/v1/files:batchTrash', {
+      ids: typeof id === 'string' ? [id] : id
+    })
+      .then(() => {
+        window.$message.success('删除成功')
+        getFileList()
+      })
+  }
+</script>
+
+<style>
+.header {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  justify-content: space-between;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+.header .title {
+  flex: 1;
+  width: 0;
+  text-overflow: ellipsis;
+  margin-right: 20px;
+}
+.header .action {
+  font-size: 24px;
+}
+.n-data-table-td {
+  cursor: pointer;
+}
+.n-data-table-td.modified_time,.n-data-table-th.modified_time {
+  color: rgba(37, 38, 43, 0.36);
+}
+.n-data-table-td.size,.n-data-table-th.szie {
+  color: rgba(37, 38, 43, 0.36);
+}
+.file-info {
+  display: flex;
+  align-items: center;
+}
+.file-info img {
+  width: 28px;
+  height: 28px;
+  margin-right: 20px;
+}
+.file-info .title {
+  flex: 1;
+  width: 0;
+}
+.file-info .action {
+  display: none;
+}
+.list-page {
+  padding: 40px;
+}
+.list-page-files .n-data-table-tr .n-data-table-td:nth-of-type(4) div {
+  display: none;
+}
+.list-page-files .n-data-table-tr:hover .n-data-table-td:nth-of-type(4) div {
+  display: block;
+}
+</style>

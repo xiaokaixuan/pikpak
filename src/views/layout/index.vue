@@ -1,0 +1,202 @@
+<template>
+  <n-layout has-sider>
+    <n-layout-sider 
+      :content-style="{display: 'flex', flexDirection: 'column'}"
+      collapse-mode="width"
+      :collapsed-width="0"
+      :width="240"
+      show-trigger="bar"
+      :collapsed="collapsed"
+      @collapse="collapsed = true"
+      @expand="collapsed = false"
+      bordered
+    >
+    
+      <a href="https://mypikpak.com/" target="_blank" class="logo-box">
+        <img src="https://www.mypikpak.com/logo.png" class="logo-box__icon" alt="">
+        <div class="logo-box__text">PikPak</div>
+      </a>
+      <n-menu :options="menuOptions" :value="String(route.name)" @update:value="goRoute"></n-menu>
+      <div class="content-bottom" v-if="!collapsed">
+        {{byteConvert(aboutInfo?.quota.usage)}} / {{byteConvert(aboutInfo?.quota.limit)}} <n-text type="primary" @click="showCode = true">会员码</n-text>
+        <n-progress 
+          v-if="aboutInfo?.quota"
+          type="line"
+          :percentage="Number((aboutInfo?.quota.usage / aboutInfo?.quota.limit * 100).toFixed(2))"
+          :indicator-placement="'inside'"
+          :height="14"
+          processing>
+        </n-progress>
+      </div>
+      <div class="sider-bottom" v-if="!collapsed">
+        <div class="bottom-user-info">
+          <img src="https://www.mypikpak.com/logo.png" class="user-info-avatar">
+          <span class="user-info-name">{{userInfo?.name}}</span>
+        </div>
+      </div>
+    </n-layout-sider>
+    <n-layout>
+      <n-layout-content style="height: 100vh;">
+        <router-view></router-view>
+      </n-layout-content>
+    </n-layout>
+  </n-layout>
+  <n-modal v-model:show="showCode">
+    <n-card style="width: 600px;" title="会员码">
+      <template #header-extra>
+        <n-icon @click="showCode = false">
+          <circle-x></circle-x>
+        </n-icon>
+      </template>
+      <n-input placeholder="会员码" v-model:value="code"></n-input>
+      <template #action>
+        <n-button :block="true" type="primary" :disabled="!code" @click="postCode">添加</n-button>
+      </template>
+    </n-card>
+  </n-modal>
+</template>
+
+<script setup lang="ts">
+import { ref } from '@vue/reactivity';
+import { h, onMounted } from '@vue/runtime-core';
+import { NLayout, NLayoutSider, NLayoutContent, NMenu, MenuOption, NIcon, NProgress, NText, NModal, NCard, NInput, NButton} from 'naive-ui'
+import { File, Trash, CircleX } from '@vicons/tabler'
+import http from '../../utils/axios'
+import { byteConvert } from '../../utils'
+import { useRoute, useRouter } from 'vue-router';
+  const collapsed = ref(false)
+  const  renderIcon = (icon:any) => {
+    return () => h(NIcon, null, { default: () => h(icon) })
+  }
+  const router = useRouter()
+  const route = useRoute()
+  const menuOptions = ref<MenuOption[]>([
+    {
+      label: '文件',
+      key: 'list',
+      icon: renderIcon(File)
+    },
+    {
+      label: '回收站',
+      key: 'trash',
+      icon: renderIcon(Trash)
+    }
+  ])
+  const userInfo = ref()
+  const getUserInfo = () => {
+    http.get('https://user.mypikpak.com/v1/user/me')
+      .then(res => {
+        userInfo.value = res.data
+      })
+  }
+  const aboutInfo = ref()
+  const getAbout = () => {
+    http.get('https://api-drive.mypikpak.com/drive/v1/about')
+      .then(res => {
+        aboutInfo.value = res.data
+      })
+  }
+  const goRoute = (key:string, item:MenuOption) => {
+    console.log(item)
+    router.push('/' + item.key)
+  }
+  onMounted(() => {
+    getUserInfo()
+    getAbout()
+  })
+  const code = ref()
+  const showCode = ref(false)
+  const postCode = () => {
+    http.post('https://api-drive.mypikpak.com/vip/v1/order/free', {
+      activation_code: code.value
+    })
+      .then(res => {
+        window.$message.success('兑换成功')
+        getAbout()
+      })
+      .finally(() => {
+        showCode.value = false
+      })
+  }
+</script>
+
+<style>
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+  .n-layout .logo-box {
+    display: flex;
+    align-items: center;
+    /* margin: auto; */
+    /* justify-content: center; */
+    padding-top: 36px;
+    margin-bottom: 8px;
+    margin-left: 30px;
+    margin-top: 0;
+    margin-right: 0;
+  }
+  .n-layout .logo-box__icon {
+    width: 24PX;
+    height: 24PX;
+    margin-right: 10PX
+  }
+  .n-layout .logo-box__text {
+    font-family: PingFangSC-Semibold;
+    font-size: 20PX;
+    letter-spacing: -1.25PX;
+    color: #000;
+  }
+  .content-bottom {
+    width: 192px;
+    left: 24px;
+    bottom: 75px;
+    padding-bottom: 28px;
+    position: absolute;
+  }
+  .n-progress {
+    margin-top: 4px;
+  }
+  .sider-bottom {
+    height: 75px;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    padding: 0 20px 0 24px;
+    box-sizing: border-box;
+  }
+  .sider-bottom::before {
+    display: block;
+    content: '';
+    width: 100%;
+    height: 1px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: rgba(132, 133, 141, 0.2)
+  }
+  .bottom-user-info {
+    width: calc(100% - 36px);
+    margin-right: 4px;
+    display: flex;
+    height: 32px;
+    align-items: center;
+    width: 100%;
+  }
+  .user-info-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+  }
+  .user-info-name {
+    font-size: 14px;
+    line-height: 1.5;
+    margin-left: 16px;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+</style>
