@@ -17,8 +17,22 @@
         </n-icon>
       </div>
     </div>
-    <n-data-table :data="filesList" size="small" :columns="columns" :loading="loading" :bordered="false"></n-data-table>
+    <n-data-table v-model:checked-row-keys="checkedRowKeys"  :row-key="row => row.id" :data="filesList" size="small" :columns="columns" :loading="loading" :bordered="false"></n-data-table>
     <task-vue ref="taskRef"></task-vue>
+    <div class="outer-wrapper static show" v-if="checkedRowKeys.length">
+      <div class="toolbar-wrapper">
+        <div class="toolbar-item" @click="deleteFile(checkedRowKeys)">
+          <n-tooltip>
+            <template #trigger>
+              <n-icon>
+                <circle-x></circle-x>
+              </n-icon>
+            </template>
+            删除所选
+          </n-tooltip>
+        </div>
+      </div>
+    </div>
     <n-modal v-model:show="showAddUrl">
       <n-card style="width: 600px;" title="添加链接">
         <template #header-extra>
@@ -66,7 +80,7 @@ import { ref } from '@vue/reactivity';
 import { h, nextTick, onMounted, watch } from '@vue/runtime-core'
 import http from '../utils/axios'
 import { useRoute, useRouter } from 'vue-router'
-import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NText, NPopconfirm } from 'naive-ui'
+import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NText, NPopconfirm, NTooltip } from 'naive-ui'
 import { CirclePlus, CircleX } from '@vicons/tabler'
 import { byteConvert } from '../utils'
 import PlyrVue from '../components/Plyr.vue'
@@ -84,7 +98,11 @@ import TaskVue from '../components/Task.vue'
     name: string
   }
   const themeVars = useThemeVars()
+  const checkedRowKeys = ref([])
   const columns = ref<DataTableColumns>([
+    {
+      type: 'selection'
+    },
     {
       title: '名称',
       key: 'name',
@@ -312,10 +330,76 @@ import TaskVue from '../components/Task.vue'
 .list-page {
   padding: 40px;
 }
-.list-page-files .n-data-table-tr .n-data-table-td:nth-of-type(4) div {
+.list-page-files .n-data-table-tr .n-data-table-td:nth-of-type(5) div {
   display: none;
 }
-.list-page-files .n-data-table-tr:hover .n-data-table-td:nth-of-type(4) div {
+.list-page-files .n-data-table-tr:hover .n-data-table-td:nth-of-type(5) div {
   display: block;
 }
+.outer-wrapper {
+  opacity: 0;
+  position: absolute;
+  left: 50%;
+  bottom: 52px;
+  transform: translateX(-50%);
+  z-index: 5;
+  transition: opacity 0.3s ease;
+}
+.outer-wrapper.static {
+  animation: move-down ease 0.3s;
+}
+.outer-wrapper.show {
+  opacity: 1;
+}
+.outer-wrapper.show.static {
+  animation: move-up ease 0.3s;
+}
+.toolbar-wrapper {
+  display: -ms-flexbox;
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid #84858d33;
+  background: #000;
+  overflow: visible;
+  user-select: none;
+  box-shadow: 0 0 1px 1px rgba(28, 28, 32, 0.05),
+    0 8px 24px rgba(28, 28, 32, 0.12);
+}
+.toolbar-item {
+  border-radius: 5px;
+  padding: 6px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  color: #fff;
+  margin-left: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.toolbar-item:first-child {
+  margin-left: 0;
+}
+.tool-icon {
+  font-size: 18px;
+}
+@keyframes move-down {
+  0% {
+    bottom: 52px;
+  }
+  100% {
+    bottom: -52px;
+  }
+}
+@keyframes move-up {
+  0% {
+    bottom: -52px;
+  }
+  100% {
+    bottom: 52px;
+  }
+}
+
 </style>

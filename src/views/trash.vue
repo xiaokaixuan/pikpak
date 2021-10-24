@@ -9,7 +9,31 @@
         </n-breadcrumb>
       </div>
     </div>
-    <n-data-table :data="filesList" size="small" :columns="columns" :bordered="false" :loading="loading"></n-data-table>
+    <n-data-table v-model:checked-row-keys="checkedRowKeys"  :row-key="row => row.id" :data="filesList" size="small" :columns="columns" :bordered="false" :loading="loading"></n-data-table>
+    <div class="outer-wrapper static show" v-if="checkedRowKeys.length">
+      <div class="toolbar-wrapper">
+        <div class="toolbar-item" @click="unTransh(checkedRowKeys)">
+          <n-tooltip>
+            <template #trigger>
+              <n-icon>
+                <corner-up-left-double></corner-up-left-double>
+              </n-icon>
+            </template>
+            还原所选
+          </n-tooltip>
+        </div>
+        <div class="toolbar-item" @click="deleteTransh(checkedRowKeys)">
+          <n-tooltip>
+            <template #trigger>
+              <n-icon>
+                <circle-x></circle-x>
+              </n-icon>
+            </template>
+            删除所选
+          </n-tooltip>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -17,11 +41,16 @@
 import { ref } from '@vue/reactivity';
 import { h, onMounted } from '@vue/runtime-core'
 import http from '../utils/axios'
-import { DataTableColumns, NDataTable, NTime, NEllipsis, NBreadcrumb, NBreadcrumbItem, NSpace, NText, NPopconfirm } from 'naive-ui'
+import { DataTableColumns, NDataTable, NTime, NEllipsis, NBreadcrumb, NBreadcrumbItem, NSpace, NText, NPopconfirm, NIcon, NTooltip } from 'naive-ui'
 import { byteConvert } from '../utils'
+import { CircleX, CornerUpLeftDouble } from '@vicons/tabler'
 
   const filesList = ref()
+  const checkedRowKeys = ref([])
   const columns = ref<DataTableColumns>([
+    {
+      type: 'selection'
+    },
     {
       title: '名称',
       key: 'name',
@@ -128,6 +157,7 @@ import { byteConvert } from '../utils'
       ids: typeof id === 'string' ? [id] : id
     })
       .then(() => {
+        window.$message.success('删除成功')
         getFileList()
       })
   }
@@ -189,5 +219,70 @@ import { byteConvert } from '../utils'
 }
 .list-page {
   padding: 40px;
+}
+.outer-wrapper {
+  opacity: 0;
+  position: absolute;
+  left: 50%;
+  bottom: 52px;
+  transform: translateX(-50%);
+  z-index: 5;
+  transition: opacity 0.3s ease;
+}
+.outer-wrapper.static {
+  animation: move-down ease 0.3s;
+}
+.outer-wrapper.show {
+  opacity: 1;
+}
+.outer-wrapper.show.static {
+  animation: move-up ease 0.3s;
+}
+.toolbar-wrapper {
+  display: -ms-flexbox;
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid #84858d33;
+  background: #000;
+  overflow: visible;
+  user-select: none;
+  box-shadow: 0 0 1px 1px rgba(28, 28, 32, 0.05),
+    0 8px 24px rgba(28, 28, 32, 0.12);
+}
+.toolbar-item {
+  border-radius: 5px;
+  padding: 6px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  color: #fff;
+  margin-left: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.toolbar-item:first-child {
+  margin-left: 0;
+}
+.tool-icon {
+  font-size: 18px;
+}
+@keyframes move-down {
+  0% {
+    bottom: 52px;
+  }
+  100% {
+    bottom: -52px;
+  }
+}
+@keyframes move-up {
+  0% {
+    bottom: -52px;
+  }
+  100% {
+    bottom: 52px;
+  }
 }
 </style>
