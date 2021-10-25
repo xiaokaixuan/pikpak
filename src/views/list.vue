@@ -18,6 +18,7 @@
       </div>
     </div>
     <n-data-table v-model:checked-row-keys="checkedRowKeys"  :row-key="row => row.id" :data="filesList" size="small" :columns="columns" :loading="loading" :bordered="false"></n-data-table>
+    <n-button block type="primary" style="margin-top: 10px" @click="getFileList" v-if="pageToken">加载更多</n-button>
     <task-vue ref="taskRef"></task-vue>
     <div class="outer-wrapper static show" v-if="checkedRowKeys.length">
       <div class="toolbar-wrapper">
@@ -216,6 +217,7 @@ import { computed } from 'vue';
     }
   ])
   const loading = ref(false)
+  const pageToken = ref()
   const getFileList = () => {
     loading.value = true
     http.get('https://api-drive.mypikpak.com/drive/v1/files', {
@@ -223,6 +225,7 @@ import { computed } from 'vue';
         parent_id: route.params.id,
         thumbnail_size: 'SIZE_LARGE',
         with_audit: true,
+        page_token: pageToken.value || undefined,
         filters: {
           "phase": {"eq": "PHASE_TYPE_COMPLETE"},
           "trashed":{"eq":false}
@@ -231,7 +234,11 @@ import { computed } from 'vue';
     })
       .then((res:any) => {
         const {data} = res
-        filesList.value = data.files
+        if(!pageToken.value) {
+          filesList.value = []
+        }
+        filesList.value = filesList.value.concat(data.files)
+        pageToken.value = data.next_page_token
       })
       .finally(() => {
         loading.value = false
