@@ -21,6 +21,16 @@
     <task-vue ref="taskRef"></task-vue>
     <div class="outer-wrapper static show" v-if="checkedRowKeys.length">
       <div class="toolbar-wrapper">
+        <div class="toolbar-item" @click="copyAll">
+          <n-tooltip>
+            <template #trigger>
+              <n-icon>
+                <share></share>
+              </n-icon>
+            </template>
+            分享秒传
+          </n-tooltip>
+        </div>
         <div class="toolbar-item" @click="deleteFile(checkedRowKeys)">
           <n-tooltip>
             <template #trigger>
@@ -40,7 +50,7 @@
             <circle-x></circle-x>
           </n-icon>
         </template>
-        <n-input type="textarea" :rows="6" placeholder="支持Magent，换行添加多个" v-model:value="newUrl"></n-input>
+        <n-input type="textarea" :rows="6" placeholder="支持Magent链接和秒传链接(PikPak://PikPak Tutorial.mp4|19682618|0A4E4FC6FA600D9705B9800BA1687C769273BC97)，换行添加多个，秒传链接默认保存到当前文件夹或第一个文件夹不能保存到根目录 Magent链接只能默认保存到My Pack" v-model:value="newUrl"></n-input>
         <template #action>
           <n-button :block="true" type="primary" :disabled="!newUrl" @click="addUrl">添加</n-button>
         </template>
@@ -80,11 +90,13 @@ import { ref } from '@vue/reactivity';
 import { h, nextTick, onMounted, watch } from '@vue/runtime-core'
 import http from '../utils/axios'
 import { useRoute, useRouter } from 'vue-router'
-import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NText, NPopconfirm, NTooltip } from 'naive-ui'
-import { CirclePlus, CircleX } from '@vicons/tabler'
+import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NText, NPopconfirm, NTooltip, NSpace } from 'naive-ui'
+import { CirclePlus, CircleX, Share } from '@vicons/tabler'
 import { byteConvert } from '../utils'
 import PlyrVue from '../components/Plyr.vue'
 import TaskVue from '../components/Task.vue'
+import ClipboardJS from 'clipboard'
+import { computed } from 'vue';
 
   const filesList = ref()
   const route = useRoute()
@@ -95,10 +107,12 @@ import TaskVue from '../components/Task.vue'
     id: string,
     thumbnail_link: string,
     icon_link: string,
-    name: string
+    name: string,
+    size: number,
+    hash: string
   }
   const themeVars = useThemeVars()
-  const checkedRowKeys = ref([])
+  const checkedRowKeys = ref<string[]>([])
   const columns = ref<DataTableColumns>([
     {
       type: 'selection'
@@ -170,14 +184,22 @@ import TaskVue from '../components/Task.vue'
     {
       title: '',
       key: 'action',
-      width: 60,
+      width: 120,
       align: 'right',
-      render: (row:any) => {
-        return h('div', {}, [
+      render: (row:any) => h(NSpace, {}, {
+        default: () => [
+          row.size > 0 ? h(NText,{
+            type: 'primary',
+            onClick: () => {
+              copy(`PikPak://${row.name}|${row.size}|${row.hash}`)
+            }
+          }, {
+            default: () => "分享秒传"
+          }) : '',
           h(NPopconfirm, {
             placement: 'right',
             onPositiveClick: () => {
-              deleteFile(row.id)
+              deleteFile(String(row.id))
             }
           }, {
             trigger: () => {
@@ -189,8 +211,8 @@ import TaskVue from '../components/Task.vue'
             },
             default: () => '确定删除文件吗？'
           })
-        ])
-      }
+        ]
+      })
     }
   ])
   const loading = ref(false)
@@ -224,9 +246,6 @@ import TaskVue from '../components/Task.vue'
           parentInfo.value = res.data
         })
     }
-    nextTick(() => {
-      console.log(taskRef.value)
-    })
   }
   watch(route, () => {
     initPage()
@@ -250,25 +269,77 @@ import TaskVue from '../components/Task.vue'
   const showAddUrl = ref(false)
   const newUrl = ref()
   const taskRef = ref()
+  const firstFolder = computed(() => {
+    let id:string = ''
+    if(route.params.id) {
+      id = String(route.params.id)
+    } else {
+      for(let i in filesList.value) {
+        if(filesList.value[i].kind === 'drive#folder') {
+          id = filesList.value[i].id
+          break
+        }
+      }
+    }
+    return id
+  })
   const addUrl = () => {
     const urlList = newUrl.value.split('\n')
+    let successLength = 0
+    let hasTask = false
+    let hasHash = false
     urlList.forEach((url:string) => {
-      http.post('https://api-drive.mypikpak.com/drive/v1/files', {
-        kind: "drive#file",
-        name: "",
-        upload_type: "UPLOAD_TYPE_URL",
-        url: {
-          url: url
-        },
-        params: {"from":"file"},
-        folder_type: "DOWNLOAD"
-      })
-        .then(res => {
-          console.log(res)
-          window.$message.success('添加成功')
-          showAddUrl.value = false
-          taskRef.value.getTask()
-        })
+      if(url) {
+        let postData = {}
+        if(url.indexOf('PikPak://') === 0) {
+          const urlData = url.substring(9).split('|')
+          hasHash = true
+          postData = {
+              kind: "drive#file",
+              parent_id: firstFolder.value,
+              name: urlData[0],
+              size: urlData[1],
+              hash: urlData[2],
+              upload_type: "UPLOAD_TYPE_RESUMABLE",
+              objProvider: {
+                  provider: "UPLOAD_TYPE_UNKNOWN"
+              }
+          }
+        } else {
+          hasTask = true
+          postData = {
+            kind: "drive#file",
+            name: "",
+            parent_id: route.params.id || '',
+            upload_type: "UPLOAD_TYPE_URL",
+            url: {
+              url: url
+            },
+            params: {"from":"file"},
+            folder_type: "DOWNLOAD"
+          }
+        }
+        showAddUrl.value = false
+        http.post('https://api-drive.mypikpak.com/drive/v1/files', postData)
+          .then((res:any) => {
+            if(res.data.upload_type === 'UPLOAD_TYPE_UNKNOWN' || url.indexOf('PikPak://') === -1) {
+              window.$message.success('添加成功')
+            }
+          })
+          .finally(() => {
+            successLength++
+            if(successLength === urlList.length) {
+              if(hasTask) {
+                taskRef.value.getTask()
+              }
+              if(hasHash) {
+                getFileList()
+              }
+            }
+          })
+      } else {
+        successLength++
+      }
     })
   }
   const deleteFile = (id:string | string[]) => {
@@ -280,6 +351,29 @@ import TaskVue from '../components/Task.vue'
         getFileList()
       })
   }
+  const copy = (value:string) => {
+    const fakeElement = document.createElement('button')
+    const clipboard = new ClipboardJS(fakeElement, {
+      text: () => value,
+      action: () => 'copy',
+    })
+    clipboard.on('success', (e) => {
+      window.$message.success('复制成功')
+      clipboard.destroy()
+    })
+    fakeElement.click()
+  }
+  const copyAll = () => {
+    let text = ''
+    filesList.value.forEach((item:FileInfo) => {
+      if(checkedRowKeys.value.indexOf(item.id) !== -1 && item.size > 0) {
+        text = text + `PikPak://${item.name}|${item.size}|${item.hash}` + '\n'
+      }
+    })
+    copy(text)
+    checkedRowKeys.value = []
+  }
+
 </script>
 
 <style>
@@ -329,6 +423,9 @@ import TaskVue from '../components/Task.vue'
 }
 .list-page {
   padding: 40px;
+}
+.list-page-files {
+  padding-bottom: 80px;
 }
 .list-page-files .n-data-table-tr .n-data-table-td:nth-of-type(5) div {
   display: none;
