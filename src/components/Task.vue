@@ -139,7 +139,6 @@ import { CircleX } from '@vicons/tabler'
   vertical-align: baseline;
 }
 .content {
-  margin-top: 20px;
   width: 375px;
   max-height: 530px;
   min-height: 54px;

@@ -25,19 +25,28 @@
           :percentage="Number((aboutInfo?.quota.usage / aboutInfo?.quota.limit * 100).toFixed(2))"
           :indicator-placement="'inside'"
           :height="14"
+          :color="vipInfo?.status === 'ok' ? '#d1ae6a' : undefined"
           processing>
         </n-progress>
       </div>
-      <div class="sider-bottom" v-if="!collapsed">
+      <div class="sider-bottom" v-if="!collapsed" :class="{vip: vipInfo?.status === 'ok'}">
         <div class="bottom-user-info">
-          <img src="https://www.mypikpak.com/logo.png" class="user-info-avatar">
-          <span class="user-info-name">{{userInfo?.name}}</span>
+          <img src="../../assets/logo1.png" class="user-info-avatar" v-if="vipInfo?.status === 'ok'">
+          <img src="https://www.mypikpak.com/logo.png" v-else class="user-info-avatar">
+          <div class="user-info-name">
+            {{userInfo?.name}}
+            <div v-if="vipInfo?.status === 'ok' && vipInfo?.expire">
+              会员时间 <n-time :to="new Date().getTime()" :time="new Date(vipInfo.expire).getTime()" type="relative"></n-time>
+            </div>
+          </div>
         </div>
       </div>
     </n-layout-sider>
     <n-layout>
       <n-layout-content style="height: 100vh;">
-        <router-view></router-view>
+        <n-scrollbar style="max-height: 100vh;">
+          <router-view></router-view>
+        </n-scrollbar>
       </n-layout-content>
     </n-layout>
   </n-layout>
@@ -59,7 +68,7 @@
 <script setup lang="ts">
 import { ref } from '@vue/reactivity';
 import { h, onMounted } from '@vue/runtime-core';
-import { NLayout, NLayoutSider, NLayoutContent, NMenu, MenuOption, NIcon, NProgress, NText, NModal, NCard, NInput, NButton} from 'naive-ui'
+import { NLayout, NLayoutSider, NLayoutContent, NMenu, MenuOption, NIcon, NProgress, NText, NModal, NCard, NInput, NButton, NScrollbar, NTime } from 'naive-ui'
 import { File, Trash, CircleX } from '@vicons/tabler'
 import http from '../../utils/axios'
 import { byteConvert } from '../../utils'
@@ -96,6 +105,13 @@ import { useRoute, useRouter } from 'vue-router';
         aboutInfo.value = res.data
       })
   }
+  const vipInfo = ref()
+  const getVip = () => {
+    http.get('https://api-drive.mypikpak.com/drive/v1/privilege/vip')
+      .then((res:any) => {
+        vipInfo.value = res.data?.data
+      })
+  }
   const goRoute = (key:string, item:MenuOption) => {
     console.log(item)
     router.push('/' + item.key)
@@ -103,6 +119,7 @@ import { useRoute, useRouter } from 'vue-router';
   onMounted(() => {
     getUserInfo()
     getAbout()
+    getVip()
   })
   const code = ref()
   const showCode = ref(false)
@@ -167,6 +184,9 @@ import { useRoute, useRouter } from 'vue-router';
     flex-direction: column;
     padding: 0 20px 0 24px;
     box-sizing: border-box;
+  }
+  .sider-bottom.vip {
+    background-color: #f4eddb;
   }
   .sider-bottom::before {
     display: block;

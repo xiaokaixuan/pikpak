@@ -17,8 +17,12 @@
         </n-icon>
       </div>
     </div>
-    <n-data-table v-model:checked-row-keys="checkedRowKeys"  :row-key="row => row.id" :data="filesList" size="small" :columns="columns" :loading="loading" :bordered="false"></n-data-table>
-    <n-button block type="primary" style="margin-top: 10px" @click="getFileList" v-if="pageToken">加载更多</n-button>
+    <n-scrollbar style="max-height: calc(100vh - 190px);" @scroll="scrollHandle">
+      <n-data-table v-model:checked-row-keys="checkedRowKeys"  :row-key="row => row.id" :data="filesList" size="small" :columns="columns" :bordered="false"></n-data-table>
+      <div class="loading" v-if="loading">
+        <n-spin size="small" />加载中
+      </div>
+    </n-scrollbar>
     <task-vue ref="taskRef"></task-vue>
     <div class="outer-wrapper static show" v-if="checkedRowKeys.length">
       <div class="toolbar-wrapper">
@@ -88,17 +92,16 @@
 
 <script setup lang="ts">
 import { ref } from '@vue/reactivity';
-import { h, nextTick, onMounted, watch } from '@vue/runtime-core'
+import { h, computed, onMounted, watch } from '@vue/runtime-core'
 import http from '../utils/axios'
 import { useRoute, useRouter } from 'vue-router'
-import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NText, NPopconfirm, NTooltip, NSpace } from 'naive-ui'
+import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NText, NPopconfirm, NTooltip, NSpace, NScrollbar, NSpin } from 'naive-ui'
 import { CirclePlus, CircleX, Share } from '@vicons/tabler'
 import { byteConvert } from '../utils'
 import PlyrVue from '../components/Plyr.vue'
 import TaskVue from '../components/Task.vue'
 import ClipboardJS from 'clipboard'
-import { computed } from 'vue';
-
+import streamSaver from 'streamsaver'
   const filesList = ref()
   const route = useRoute()
   const router = useRouter()
@@ -185,10 +188,20 @@ import { computed } from 'vue';
     {
       title: '',
       key: 'action',
-      width: 120,
+      width: 170,
       align: 'right',
-      render: (row:any) => h(NSpace, {}, {
+      render: (row:any) => h(NSpace, {
+        justify: 'end'
+      }, {
         default: () => [
+          row.size > 0 ? h(NText,{
+            type: 'primary',
+            onClick: () => {
+              downFile(row.id)
+            }
+          }, {
+            default: () => "下载"
+          }) : '',
           row.size > 0 ? h(NText,{
             type: 'primary',
             onClick: () => {
@@ -258,7 +271,23 @@ import { computed } from 'vue';
     initPage()
   })
   const parentInfo = ref()
-  onMounted(initPage)
+  onMounted(() => {
+    initPage()
+    window.onbeforeunload = function (e) {
+      if(!window.$downId || window.$downId.length === 0) {
+        return '还有待下载文件?';
+      }
+      e = e || window.event;
+
+      // 兼容IE8和Firefox 4之前的版本
+      if (e) {
+        e.returnValue = '还有待下载文件';
+      }
+
+      // Chrome, Safari, Firefox 4+, Opera 12+ , IE 9+
+      return '还有待下载文件?';
+    }
+  })
   const fileInfo = ref()
   const getFile = (id:string) => {
     return http.get('https://api-drive.mypikpak.com/drive/v1/files/' + id, {
@@ -380,6 +409,48 @@ import { computed } from 'vue';
     copy(text)
     checkedRowKeys.value = []
   }
+  const downFile = (id:string) => {
+    getFile(id)
+      .then((info:any) => {
+        streamSaver.mitm = 'mitm.html'
+        const fileStream = streamSaver.createWriteStream(info.data.name)
+        fetch(info.data.web_content_link).then((res:any) => {
+          if(!window.$downId) {
+            window.$downId = []
+          }
+          window.$downId.push(id)
+          const readableStream = res.body
+          // more optimized
+          if (window.WritableStream && readableStream?.pipeTo) {
+            return readableStream.pipeTo(fileStream)
+              .then(() => {
+                window.$downId.splice(window.$downId.indexOf(id), 1)
+              })
+          }
+
+          const writer = fileStream.getWriter()
+
+          const reader = res.body.getReader()
+          const pump = () => reader.read()
+            .then((res:any) => {
+              if(res.done) {
+                writer.close()
+              } else {
+                writer.write(res.value).then(pump)
+              }
+            })
+
+          pump()
+        })
+      })
+  }
+  const scrollHandle = (e:any) =>  {
+    if(e.target.offsetHeight - e.target.scrollTop < 30) {
+      if(pageToken.value && !loading.value) {
+        getFileList()
+      }
+    }
+  }
 
 </script>
 
@@ -430,6 +501,15 @@ import { computed } from 'vue';
 }
 .list-page {
   padding: 40px;
+}
+.list-page .loading {
+  margin-top: 20px;
+  text-align: center;
+  color: rgba(37, 38, 43, 0.36);
+}
+.list-page .loading .n-spin-body {
+  vertical-align: middle;
+  margin-right: 10px;
 }
 .list-page-files {
   padding-bottom: 80px;

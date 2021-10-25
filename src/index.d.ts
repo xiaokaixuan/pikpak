@@ -1,3 +1,4 @@
 interface Window {
-  $message: any
+  $message: any,
+  $downId: string[]
 }
