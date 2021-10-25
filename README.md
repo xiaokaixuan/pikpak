@@ -4,6 +4,9 @@
 
  * [PikPak](https://mypikpak.com)
 
+## Demo
+ * [PikPak](https://mumuchenchen.github.io/pikpak/)
+
 ## 安装部署
 
 ### Github Aciton
