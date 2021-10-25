@@ -275,17 +275,17 @@ import streamSaver from 'streamsaver'
     initPage()
     window.onbeforeunload = function (e) {
       if(!window.$downId || window.$downId.length === 0) {
-        return '还有待下载文件?';
+        return null
       }
       e = e || window.event;
 
       // 兼容IE8和Firefox 4之前的版本
       if (e) {
-        e.returnValue = '还有待下载文件';
+        e.returnValue = '还有待下载文件'
       }
 
       // Chrome, Safari, Firefox 4+, Opera 12+ , IE 9+
-      return '还有待下载文件?';
+      return '还有待下载文件?'
     }
   })
   const fileInfo = ref()
