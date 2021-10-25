@@ -258,6 +258,7 @@ import streamSaver from 'streamsaver'
       })
   }
   const initPage = () => {
+    filesList.value = []
     getFileList()
     parentInfo.value = {}
     if(route.params.id) {
