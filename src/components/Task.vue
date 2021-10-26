@@ -119,6 +119,14 @@ import { CircleX } from '@vicons/tabler'
   right: 32px;
   bottom: 28px;
 }
+@media(max-width: 968px) {
+  .container {
+    width: 100%;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+}
 .container *,
 .container *::before,
 .container *::after {

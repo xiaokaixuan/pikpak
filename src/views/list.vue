@@ -1,5 +1,5 @@
 <template>
-  <div class="list-page list-page-files">
+  <div class="list-page list-page-files" >
     <div class="header">
       <div class="title n-ellipsis">
         <n-breadcrumb separator=">">
@@ -117,6 +117,31 @@ import streamSaver from 'streamsaver'
   }
   const themeVars = useThemeVars()
   const checkedRowKeys = ref<string[]>([])
+  const smallColums = ref<DataTableColumns>([
+    {
+      title: '修改时间',
+      key: 'modified_time',
+      sorter: 'default',
+      align: 'right',
+      render: (row) => {
+        return h(NTime, {
+          time: new Date(String(row.modified_time) || ''),
+          format: 'MM-dd hh:mm',
+        })
+      },
+      className: 'modified_time',
+      width: 160
+    },
+    {
+      title: '大小',
+      key: 'size',
+      sorter: 'default',
+      align: 'right',
+      render: (row) => Number(row.size) > 0 ? byteConvert(Number(row.size)) : '',
+      className: 'size',
+      width: 160
+    },
+  ])
   const columns = ref<DataTableColumns>([
     {
       type: 'selection'
@@ -161,29 +186,6 @@ import streamSaver from 'streamsaver'
           }, '1')
         ])
       }
-    },
-    {
-      title: '修改时间',
-      key: 'modified_time',
-      sorter: 'default',
-      align: 'right',
-      render: (row) => {
-        return h(NTime, {
-          time: new Date(String(row.modified_time) || ''),
-          format: 'MM-dd hh:mm',
-        })
-      },
-      className: 'modified_time',
-      width: 160
-    },
-    {
-      title: '大小',
-      key: 'size',
-      sorter: 'default',
-      align: 'right',
-      render: (row) => Number(row.size) > 0 ? byteConvert(Number(row.size)) : '',
-      className: 'size',
-      width: 160
     },
     {
       title: '',
@@ -273,6 +275,10 @@ import streamSaver from 'streamsaver'
   })
   const parentInfo = ref()
   onMounted(() => {
+    const width = document.body.clientWidth
+    if(width > 968) {
+      columns.value.splice(2, 0, ...smallColums.value)
+    } 
     initPage()
     window.onbeforeunload = function (e) {
       if(!window.$downId || window.$downId.length === 0) {
@@ -456,6 +462,7 @@ import streamSaver from 'streamsaver'
 </script>
 
 <style>
+
 .header {
   height: 40px;
   display: flex;
@@ -502,6 +509,17 @@ import streamSaver from 'streamsaver'
 }
 .list-page {
   padding: 40px;
+}
+@media(max-width: 968px) {
+  .list-page {
+    padding: 10px;
+  }
+  .file-info img {
+    display: none;
+  }
+  .list-page-files .n-data-table-tr .n-data-table-td:nth-of-type(5) div {
+    display: block;
+  }
 }
 .list-page .loading {
   margin-top: 20px;

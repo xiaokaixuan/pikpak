@@ -67,7 +67,7 @@ const loginPost = () => {
      box-sizing: border-box;
     min-height: 100vh;
     width: 100%;
-    padding-top: 139px;
+    padding-top: 0px;
     display: flex;
     align-items: flex-start;
     /* align-items: center; */
@@ -82,7 +82,6 @@ const loginPost = () => {
     flex-direction: column;
     margin-right: 49px;
     margin-left: 28px;
-    float: left
   }
   .login-page .down img {
     max-width: 56.5625vw;
@@ -91,7 +90,7 @@ const loginPost = () => {
   .login-page .logo-box {
     display: flex;
     align-items: center;
-    margin: auto;
+    margin: 140px auto 0;
     justify-content: center;
   }
   .login-page .logo-box__icon {
@@ -121,5 +120,15 @@ const loginPost = () => {
   }
   .login-page .login-form  button {
     width: 100%;
+  }
+  @media(max-width: 968px) {
+    .login-page {
+      justify-content: flex-end;
+      flex-direction: column-reverse;
+      align-items: center;
+    }
+    .login-page .logo-box {
+      margin-top: 40px;
+    }
   }
 </style>

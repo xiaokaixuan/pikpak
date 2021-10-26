@@ -1,5 +1,5 @@
 <template>
-  <n-layout has-sider>
+  <n-layout has-sider v-resize @resize="handleResize">
     <n-layout-sider 
       :content-style="{display: 'flex', flexDirection: 'column'}"
       collapse-mode="width"
@@ -67,7 +67,7 @@
 
 <script setup lang="ts">
 import { ref } from '@vue/reactivity';
-import { h, onMounted } from '@vue/runtime-core';
+import { h, onMounted, watch } from '@vue/runtime-core';
 import { NLayout, NLayoutSider, NLayoutContent, NMenu, MenuOption, NIcon, NProgress, NText, NModal, NCard, NInput, NButton, NScrollbar, NTime } from 'naive-ui'
 import { File, Trash, CircleX } from '@vicons/tabler'
 import http from '../../utils/axios'
@@ -135,6 +135,18 @@ import { useRoute, useRouter } from 'vue-router';
         showCode.value = false
       })
   }
+  const isMobile = ref(false)
+  const handleResize = (w:number) => {
+    isMobile.value = w < 800
+    if(!collapsed.value) {
+      collapsed.value = w < 800
+    }
+  }
+  watch(route, () => {
+    if(isMobile.value) {
+      collapsed.value = true
+    }
+  })
 </script>
 
 <style>

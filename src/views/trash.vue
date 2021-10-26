@@ -47,6 +47,29 @@ import { CircleX, CornerUpLeftDouble } from '@vicons/tabler'
 
   const filesList = ref()
   const checkedRowKeys = ref([])
+  const smallColums = ref<DataTableColumns>([
+    {
+      title: '删除时间',
+      key: 'modified_time',
+      sorter: 'default',
+      render: (row) => {
+        return h(NTime, {
+          time: new Date(String(row.delete_time) || ''),
+          format: 'MM-dd hh:mm'
+        })
+      },
+      className: 'modified_time',
+      width: 200
+    },
+    {
+      title: '大小',
+      key: 'size',
+      sorter: 'default',
+      render: (row) => Number(row.size) > 0 ? byteConvert(Number(row.size)) : '',
+      className: 'size',
+      width: 160
+    }
+  ])
   const columns = ref<DataTableColumns>([
     {
       type: 'selection'
@@ -74,27 +97,6 @@ import { CircleX, CornerUpLeftDouble } from '@vicons/tabler'
           }, '1')
         ])
       }
-    },
-    {
-      title: '删除时间',
-      key: 'modified_time',
-      sorter: 'default',
-      render: (row) => {
-        return h(NTime, {
-          time: new Date(String(row.delete_time) || ''),
-          format: 'MM-dd hh:mm'
-        })
-      },
-      className: 'modified_time',
-      width: 200
-    },
-    {
-      title: '大小',
-      key: 'size',
-      sorter: 'default',
-      render: (row) => Number(row.size) > 0 ? byteConvert(Number(row.size)) : '',
-      className: 'size',
-      width: 160
     },
     {
       title: '操作',
@@ -169,7 +171,13 @@ import { CircleX, CornerUpLeftDouble } from '@vicons/tabler'
         getFileList()
       })
   }
-  onMounted(getFileList)
+  onMounted(() => {
+    const width = document.body.clientWidth
+    if(width > 968) {
+      columns.value.splice(2, 0, ...smallColums.value)
+    }
+    getFileList()
+  })
 </script>
 
 <style>
