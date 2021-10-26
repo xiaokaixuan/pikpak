@@ -433,6 +433,7 @@ import streamSaver from 'streamsaver'
     })
       .then(() => {
         window.$message.success('删除成功')
+        pageToken.value = ''
         getFileList()
       })
   }
