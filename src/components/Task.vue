@@ -126,9 +126,6 @@ import { CircleX } from '@vicons/tabler'
     bottom: 0;
     left: 0;
   }
-  .content {
-    width: 100%;
-  }
 }
 .container *,
 .container *::before,
@@ -150,7 +147,7 @@ import { CircleX } from '@vicons/tabler'
   vertical-align: baseline;
 }
 .content {
-  width: 375px;
+  width: 100%;
   max-height: 530px;
   min-height: 54px;
   background: #fff;
