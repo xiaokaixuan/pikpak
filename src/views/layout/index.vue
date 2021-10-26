@@ -39,6 +39,16 @@
               会员时间 <n-time :to="new Date().getTime()" :time="new Date(vipInfo.expire).getTime()" type="relative"></n-time>
             </div>
           </div>
+          <div class="action">
+            <n-tooltip>
+              <template #trigger>
+                <n-icon @click="logoutPost">
+                  <logout></logout>
+                </n-icon>
+              </template>
+              退出登录
+            </n-tooltip>
+          </div>
         </div>
       </div>
     </n-layout-sider>
@@ -68,8 +78,8 @@
 <script setup lang="ts">
 import { ref } from '@vue/reactivity';
 import { h, onMounted, watch } from '@vue/runtime-core';
-import { NLayout, NLayoutSider, NLayoutContent, NMenu, MenuOption, NIcon, NProgress, NText, NModal, NCard, NInput, NButton, NScrollbar, NTime } from 'naive-ui'
-import { File, Trash, CircleX } from '@vicons/tabler'
+import { NLayout, NLayoutSider, NLayoutContent, NMenu, MenuOption, NIcon, NProgress, NText, NModal, NCard, NInput, NButton, NScrollbar, NTime, NTooltip, useDialog } from 'naive-ui'
+import { File, Trash, CircleX, Logout } from '@vicons/tabler'
 import http from '../../utils/axios'
 import { byteConvert } from '../../utils'
 import { useRoute, useRouter } from 'vue-router';
@@ -147,6 +157,24 @@ import { useRoute, useRouter } from 'vue-router';
       collapsed.value = true
     }
   })
+  
+  const dialog = useDialog()
+  const logoutPost = () => {
+    dialog.warning({
+        title: '警告',
+        content: '确定退出？',
+        positiveText: '确定',
+        negativeText: '不确定',
+        onPositiveClick: () => {
+          http.post('https://user.mypikpak.com/v1/auth/revoke', {})
+            .then(res => {
+              window.localStorage.setItem('pikpakLogin', '{}')
+              window.$message.success('退出成功')
+              router.push('/login')
+            })
+        }
+      })
+  }
 </script>
 
 <style>
@@ -230,5 +258,11 @@ import { useRoute, useRouter } from 'vue-router';
     max-width: 100%;
     overflow: hidden;
     white-space: nowrap;
+    flex: 1;
+    width: 0;
+  }
+  .bottom-user-info .action{
+    font-size: 18px;
+    cursor: pointer;
   }
 </style>
