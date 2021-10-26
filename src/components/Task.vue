@@ -126,6 +126,9 @@ import { CircleX } from '@vicons/tabler'
     bottom: 0;
     left: 0;
   }
+  .content {
+    width: 100%;
+  }
 }
 .container *,
 .container *::before,
