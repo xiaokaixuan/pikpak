@@ -228,6 +228,14 @@ import { CircleX, CornerUpLeftDouble } from '@vicons/tabler'
 .list-page {
   padding: 40px;
 }
+@media(max-width: 968px) {
+  .list-page {
+    padding: 10px;
+  }
+  .file-info img {
+    display: none;
+  }
+}
 .outer-wrapper {
   opacity: 0;
   position: absolute;

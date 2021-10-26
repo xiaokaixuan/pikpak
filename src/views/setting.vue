@@ -73,4 +73,10 @@ onMounted(() => {
 .list-page {
   padding: 40px;
 }
+
+@media(max-width: 968px) {
+  .list-page {
+    padding: 10px;
+  }
+}
 </style>
