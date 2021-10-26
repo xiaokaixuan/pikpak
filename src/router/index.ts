@@ -16,7 +16,12 @@ const routes: Array<RouteRecordRaw> = [
         path: 'trash',
         name: 'trash',
         component: () => import('../views/trash.vue')
-      }
+      },
+      {
+        path: 'setting',
+        name: 'setting',
+        component: () => import('../views/setting.vue')
+      },
     ]
   },
   {

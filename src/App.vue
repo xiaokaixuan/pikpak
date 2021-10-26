@@ -14,6 +14,9 @@ import MessageContent from './components/MessageContent.vue';
     },
     Breadcrumb: {
       fontSize: '16px'
+    },
+    Dropdown: {
+      optionTextColorHover: '#fff'
     }
   })
 </script>

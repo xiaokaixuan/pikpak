@@ -95,8 +95,8 @@ import { ref } from '@vue/reactivity';
 import { h, computed, onMounted, watch } from '@vue/runtime-core'
 import http from '../utils/axios'
 import { useRoute, useRouter } from 'vue-router'
-import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NText, NPopconfirm, NTooltip, NSpace, NScrollbar, NSpin } from 'naive-ui'
-import { CirclePlus, CircleX, Share } from '@vicons/tabler'
+import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NText, NPopconfirm, NTooltip, NSpace, NScrollbar, NSpin, NDropdown, useDialog } from 'naive-ui'
+import { CirclePlus, CircleX, Dots, Share } from '@vicons/tabler'
 import { byteConvert } from '../utils'
 import PlyrVue from '../components/Plyr.vue'
 import TaskVue from '../components/Task.vue'
@@ -117,6 +117,7 @@ import streamSaver from 'streamsaver'
   }
   const themeVars = useThemeVars()
   const checkedRowKeys = ref<string[]>([])
+  const dialog = useDialog()
   const smallColums = ref<DataTableColumns>([
     {
       title: '修改时间',
@@ -130,15 +131,6 @@ import streamSaver from 'streamsaver'
         })
       },
       className: 'modified_time',
-      width: 160
-    },
-    {
-      title: '大小',
-      key: 'size',
-      sorter: 'default',
-      align: 'right',
-      render: (row) => Number(row.size) > 0 ? byteConvert(Number(row.size)) : '',
-      className: 'size',
       width: 160
     },
   ])
@@ -188,46 +180,91 @@ import streamSaver from 'streamsaver'
       }
     },
     {
+      title: '大小',
+      key: 'size',
+      sorter: (rowA:any, rowB:any) => {
+        return rowA.size - rowB.size
+      },
+      align: 'right',
+      render: (row) => Number(row.size) > 0 ? byteConvert(Number(row.size)) : '',
+      className: 'size',
+      width: 100
+    },
+    {
       title: '',
       key: 'action',
-      width: 170,
+      width: 60,
       align: 'right',
-      render: (row:any) => h(NSpace, {
-        justify: 'end'
-      }, {
-        default: () => [
-          row.size > 0 ? h(NText,{
-            type: 'primary',
-            onClick: () => {
+      render: (row:any) =>   h(NDropdown,{
+        trigger: 'click',
+        placement: 'bottom-end',
+        options: [
+          {
+            label: '直接下载',
+            key: 'down',
+            disabled: row.size <= 0
+          },
+          {
+            label: '复制下载链接',
+            key: 'copyDown',
+            disabled: row.size <= 0
+          },
+          {
+            label: '推送到Aria2',
+            key: 'aria2Post',
+            disabled: row.size <= 0 || !aria2Data.value || !aria2Data.value.host
+          },
+          {
+            label: '分享秒传',
+            key: 'share',
+            disabled: row.size <= 0
+          },
+          {
+            label: '删除',
+            key: 'delete'
+          }
+        ],
+        onSelect: (key) => {
+          switch (key) {
+            case 'down':
               downFile(row.id)
-            }
-          }, {
-            default: () => "下载"
-          }) : '',
-          row.size > 0 ? h(NText,{
-            type: 'primary',
-            onClick: () => {
+              break
+            case 'copyDown':
+              getFile(row.id)
+                .then((res:any) => {
+                  copy(res.data.web_content_link)
+                })
+              break
+            case 'aria2Post':
+              getFile(row.id)
+                .then((res:any) => {
+                  aria2Post(res)
+                })
+              break
+            case 'share':
               copy(`PikPak://${row.name}|${row.size}|${row.hash}`)
-            }
-          }, {
-            default: () => "分享秒传"
-          }) : '',
-          h(NPopconfirm, {
-            placement: 'right',
-            onPositiveClick: () => {
-              deleteFile(String(row.id))
-            }
-          }, {
-            trigger: () => {
-              return h(NText, {
-                type: 'primary',
-              }, {
-                default: () => '删除'
-              })
-            },
-            default: () => '确定删除文件吗？'
-          })
-        ]
+              break
+            case 'delete': 
+              dialog.warning({
+                  title: '警告',
+                  content: '确定删除' + row.name  + '？',
+                  positiveText: '确定',
+                  negativeText: '不确定',
+                  onPositiveClick: () => {
+                    deleteFile(String(row.id))
+                  }
+                })
+              break
+            default:
+              break
+          }
+        }
+      }, {
+        default: () => h(NIcon, {
+          color: '#306eff'
+        }, {
+          default: () => h(Dots)
+        })
       })
     }
   ])
@@ -273,12 +310,17 @@ import streamSaver from 'streamsaver'
   watch(route, () => {
     initPage()
   })
+  const aria2Data = ref()
   const parentInfo = ref()
   onMounted(() => {
     const width = document.body.clientWidth
     if(width > 968) {
       columns.value.splice(2, 0, ...smallColums.value)
-    } 
+    }
+    let aria2 = JSON.parse(window.localStorage.getItem('pikpakAria2') || '{}')
+    if(aria2.host) {
+      aria2Data.value = aria2
+    }
     initPage()
     window.onbeforeunload = function (e) {
       if(!window.$downId || window.$downId.length === 0) {
@@ -451,6 +493,39 @@ import streamSaver from 'streamsaver'
         })
       })
   }
+  const aria2Post = (res:any) => {
+
+    let postData:any = {
+        id:'',
+        jsonrpc:'2.0',
+        method:'aria2.addUri',
+        params:[
+            [res.data.web_content_link],
+            {
+              out: res.data.name
+            }
+        ]
+    }
+    if(aria2Data.value.token) {
+      postData.params.splice(0, 0, 'token:' + aria2Data.value.token)
+    }
+    fetch(aria2Data.value.host, {
+        method: 'POST',
+        body: JSON.stringify(postData),
+        headers: new Headers({
+        'Content-Type': 'application/json'
+      })
+    })
+      .then(response => response.json())
+      .then(res => {
+        if(res.error && res.error.message) {
+          window.$message.error(res.error.message)
+        } else if(res.result) {
+          window.$message.success('推送成功')
+        }
+      })
+      .catch(error => console.error('Error:', error))
+  }
   const scrollHandle = (e:any) =>  {
     if(e.target.offsetHeight - e.target.scrollTop < 30) {
       if(pageToken.value && !loading.value) {
@@ -517,9 +592,6 @@ import streamSaver from 'streamsaver'
   .file-info img {
     display: none;
   }
-  .list-page-files .n-data-table-tr .n-data-table-td:nth-of-type(5) div {
-    display: block;
-  }
 }
 .list-page .loading {
   margin-top: 20px;
@@ -532,12 +604,6 @@ import streamSaver from 'streamsaver'
 }
 .list-page-files {
   padding-bottom: 80px;
-}
-.list-page-files .n-data-table-tr .n-data-table-td:nth-of-type(5) div {
-  display: none;
-}
-.list-page-files .n-data-table-tr:hover .n-data-table-td:nth-of-type(5) div {
-  display: block;
 }
 .outer-wrapper {
   opacity: 0;

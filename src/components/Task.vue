@@ -30,7 +30,7 @@
                     </div>
                   </div>
                 </div>
-                <div class="task-progress" style="width: 60px; mrgin-right: 6px;">
+                <div class="task-progress" style="width: 60px; margin-right: 6px;">
                   <n-progress type="line" :percentage="item.progress" processing indicator-placement="inside"></n-progress>
                 </div>
                 <n-popconfirm @positive-click="deleteTask(key)" placement="right">
