@@ -56,6 +56,8 @@ const loginPost = () => {
         window.localStorage.setItem('pikpakLogin', JSON.stringify(res.data))
         if(remember.value) {
           window.localStorage.setItem('pikpakLoginData', JSON.stringify(loginData.value))
+        } else {
+          window.localStorage.removeItem('pikpakLoginData')
         }
         message.success('登录成功')
         router.push('/')
