@@ -183,7 +183,8 @@ import { useRoute, useRouter } from 'vue-router';
         onPositiveClick: () => {
           http.post('https://user.mypikpak.com/v1/auth/revoke', {})
             .then(res => {
-              window.localStorage.setItem('pikpakLogin', '{}')
+              window.localStorage.removeItem('pikpakLogin')
+              window.localStorage.removeItem('pikpakLoginData')
               window.$message.success('退出成功')
               router.push('/login')
             })
