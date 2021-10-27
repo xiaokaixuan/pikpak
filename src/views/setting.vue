@@ -3,12 +3,18 @@
     <n-collapse :default-expanded-names="['0', '2']">
       <n-collapse-item name="0" title="aria2设置">
         <n-form label-width="100px" label-align="left" label-placement="left">
-          <n-form-item label="aria2链接">
+          <n-form-item label="aria2链接：">
             <n-input v-model:value="aria2Data.host" placeholder="例如http://localhost:6800/jsonrpc"></n-input>
           </n-form-item>
-          <n-form-item label="aria2Token">
+          <n-form-item label="aria2Token：">
             <n-input v-model:value="aria2Data.token" type="password" show-password-on="mousedown"></n-input>
           </n-form-item>
+          <n-alert title="由于浏览器限制，请按下图设置开始混合模式" type="info"  v-if="aria2Data.host && aria2Data.host.indexOf('https://') === -1 && aria2Data.host.indexOf('http://localhost') == -1 && aria2Data.host.indexOf('http://127.0.0.1') === -1">
+            <img src="../assets/aria2-tip-1.png" alt=""> 
+            <br />
+            <br />
+            <img src="../assets/aria2-tip-2.png" alt="">
+          </n-alert>
           <n-form-item>
             <n-button type="primary" @click="testAria2">测试并保存</n-button>
           </n-form-item>
@@ -47,7 +53,7 @@
 <script setup lang="ts">
 import { ref } from '@vue/reactivity';
 import { onMounted } from '@vue/runtime-core';
-import { NForm, NFormItem, NButton, NInput, NCollapse, NCollapseItem, NSpace, NSwitch, useDialog } from 'naive-ui'
+import { NForm, NFormItem, NButton, NInput, NCollapse, NCollapseItem, NSpace, NSwitch, useDialog, NAlert } from 'naive-ui'
 const aria2Data = ref({
   host: '',
   token: ''
