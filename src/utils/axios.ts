@@ -11,18 +11,56 @@ instance.interceptors.request.use(request => {
   request.headers = {
     'Authorization': pikpakLogin.token_type + ' ' + pikpakLogin.access_token
   }
-  request.url = 'https://cors.z7.workers.dev/' + request.url
+  if(request.url?.indexOf('https://cors.z7.workers.dev') === -1) {
+    request.url = 'https://cors.z7.workers.dev/' + request.url
+  }
   return request
 })
-
+let isLoginLoading = false
 instance.interceptors.response.use(response => {
   return response
 }, (error) => {
-  const { response } = error
+  const { response, config } = error
   if(response.status) {
     switch (response.status) {
       case 401:
-        router.push('/login')
+        // router.push('/login')
+        const loginData = window.localStorage.getItem('pikpakLoginData')
+        const loginDataJson = loginData ? JSON.parse(loginData) : null
+        if(loginDataJson.username && loginDataJson.password && !isLoginLoading) {
+          console.log('wait', config.url)
+          isLoginLoading = true
+          return instance.post('https://user.mypikpak.com/v1/auth/signin', {
+            "captcha_token": "",
+            "client_id": "YNxT9w7GMdWvEOKa",
+            "client_secret": "dbw2OtmVEeuUvIptb1Coyg",
+            ...loginDataJson
+          })
+            .then((res:any) => {
+              if(res.data && res.data.access_token) {
+                window.localStorage.setItem('pikpakLogin', JSON.stringify(res.data))
+              }
+              isLoginLoading = false
+              return instance(config)
+            })
+            .catch(() => {
+              router.push('/login')
+              return false
+            })
+        } else if(loginDataJson.username && loginDataJson.password && isLoginLoading) {
+          return new Promise((resolve, reject) => {
+            const s = setInterval(() => {
+              if(!isLoginLoading) {
+                clearInterval(s)
+                resolve(instance(config))
+              }
+            }, 100)
+          })
+        } else {
+          router.push('/login')
+          return false
+        }
+        
         break;
       case 400:
         window.$message.error(response.data.error_description || '出错了')
@@ -30,6 +68,7 @@ instance.interceptors.response.use(response => {
         break;
     }
   }
+  console.log(config.url, 111)
   return Promise.reject(error)
 })
 

@@ -16,6 +16,9 @@
           <n-form-item label="">
             <n-input v-model:value="loginData.password" placeholder="请输入密码" @keyup.enter="loginPost" type="password" show-password-on="mousedown"></n-input>
           </n-form-item>
+          <n-form-item label="">
+            <n-checkbox v-model:checked="remember" @update:checked="showMessage">记住登陆</n-checkbox>
+          </n-form-item>
           <n-form-item>
             <n-button type="primary" :loading="loading" @click="loginPost">登陆</n-button>
           </n-form-item>
@@ -27,7 +30,7 @@
 
 <script setup lang='ts'>
 import { ref } from '@vue/reactivity';
-import { NForm, NFormItem, NInput, NButton, useMessage } from 'naive-ui'
+import { NForm, NFormItem, NInput, NButton, useMessage, NCheckbox, useDialog } from 'naive-ui'
 import http from '../utils/axios'
 import { useRouter } from 'vue-router'
 const loginData = ref({
@@ -51,6 +54,9 @@ const loginPost = () => {
     .then((res:any) => {
       if(res.data && res.data.access_token) {
         window.localStorage.setItem('pikpakLogin', JSON.stringify(res.data))
+        if(remember.value) {
+          window.localStorage.setItem('pikpakLoginData', JSON.stringify(loginData.value))
+        }
         message.success('登录成功')
         router.push('/')
       }
@@ -58,6 +64,23 @@ const loginPost = () => {
     .catch(() => {
       loading.value = false
     })
+}
+const remember = ref(false)
+const dialog = useDialog()
+const showMessage = () => {
+  if(remember.value) {
+    dialog.warning({
+        title: '警告',
+        content: '记住登陆是指浏览器本地明文保存用户名密码用于下次自动登陆，请勿在非信任设备选择',
+        positiveText: '确定',
+        negativeText: '不确定',
+        onPositiveClick: () => {
+        },
+        onNegativeClick: () => {
+          remember.value = false
+        },
+      })
+  }
 }
 </script>
 

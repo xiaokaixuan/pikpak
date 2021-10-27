@@ -1,7 +1,7 @@
 <template>
   <video ref="playerRef" :data-poster="videoInfo.thumbnail_link">
     <template v-for="(item, key) in videoInfo.medias">
-      <source :src="item?.link.url" :type="videoInfo.mime_type" :size="list[item.resolution_name]" />
+      <source :src="item?.link.url" :type="videoInfo.mime_type === 'video/x-matroska' ? 'video/webm' :videoInfo.mime_type" :size="list[item.resolution_name]" />
     </template>
   </video>
 </template>

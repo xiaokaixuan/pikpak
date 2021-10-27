@@ -113,12 +113,18 @@ import { useRoute, useRouter } from 'vue-router';
       .then(res => {
         userInfo.value = res.data
       })
+      .catch(error => {
+        console.log(error)
+      })
   }
   const aboutInfo = ref()
   const getAbout = () => {
     http.get('https://api-drive.mypikpak.com/drive/v1/about')
       .then(res => {
         aboutInfo.value = res.data
+      })
+      .catch(error => {
+        console.log(error)
       })
   }
   const vipInfo = ref()
@@ -146,6 +152,9 @@ import { useRoute, useRouter } from 'vue-router';
       .then(res => {
         window.$message.success('兑换成功')
         getAbout()
+      })
+      .catch(error => {
+        console.log(error)
       })
       .finally(() => {
         showCode.value = false
@@ -177,6 +186,9 @@ import { useRoute, useRouter } from 'vue-router';
               window.localStorage.setItem('pikpakLogin', '{}')
               window.$message.success('退出成功')
               router.push('/login')
+            })
+            .catch(error => {
+              console.log(error)
             })
         }
       })

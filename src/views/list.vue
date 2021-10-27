@@ -418,6 +418,7 @@ import streamSaver from 'streamsaver'
                 taskRef.value.getTask()
               }
               if(hasHash) {
+                pageToken.value = ''
                 getFileList()
               }
             }
