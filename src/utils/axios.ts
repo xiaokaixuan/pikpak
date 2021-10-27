@@ -26,7 +26,7 @@ instance.interceptors.response.use(response => {
       case 401:
         // router.push('/login')
         const loginData = window.localStorage.getItem('pikpakLoginData')
-        const loginDataJson = loginData ? JSON.parse(loginData) : null
+        const loginDataJson = loginData ? JSON.parse(loginData) : {}
         if(loginDataJson.username && loginDataJson.password && !isLoginLoading) {
           console.log('wait', config.url)
           isLoginLoading = true

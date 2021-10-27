@@ -21,7 +21,7 @@
           </n-form-item>
           <template v-if="loginSwitch">
             <n-form-item label="用户名">
-              <n-input v-model:value="loginData.username" placeholder="例如http://localhost:6800/jsonrpc"></n-input>
+              <n-input v-model:value="loginData.username" placeholder="用户名"></n-input>
             </n-form-item>
             <n-form-item label="密码">
               <n-input v-model:value="loginData.password" type="password" show-password-on="mousedown"></n-input>
