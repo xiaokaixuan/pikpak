@@ -55,7 +55,7 @@
             <circle-x></circle-x>
           </n-icon>
         </template>
-        <n-input type="textarea" :rows="6" placeholder="支持Magent链接和秒传链接(PikPak://PikPak Tutorial.mp4|19682618|0A4E4FC6FA600D9705B9800BA1687C769273BC97)，换行添加多个，秒传链接默认保存到当前文件夹或第一个文件夹不能保存到根目录 Magent链接只能默认保存到My Pack" v-model:value="newUrl"></n-input>
+        <n-input type="textarea" :rows="6" placeholder="支持Magnet链接和秒传链接(PikPak://PikPak Tutorial.mp4|19682618|0A4E4FC6FA600D9705B9800BA1687C769273BC97)，换行添加多个，秒传链接默认保存到当前文件夹或第一个文件夹不能保存到根目录 Magent链接只能默认保存到My Pack" v-model:value="newUrl"></n-input>
         <template #action>
           <n-button :block="true" type="primary" :disabled="!newUrl" @click="addUrl">添加</n-button>
         </template>

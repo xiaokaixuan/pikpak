@@ -16,7 +16,7 @@
                 </div>
                 <div class="task-info-wrapper">
                   <div class="task-file-name">
-                    <n-ellipsis :tooltip="{width: 'trigger' }">
+                    <n-ellipsis :tooltip="{width: 'trigger'}">
                       {{item.file_name}}
                     </n-ellipsis>
                   </div>
@@ -306,5 +306,7 @@ import { CircleX } from '@vicons/tabler'
   justify-content: center;
   padding-top: 8px;
 }
-
+.n-popover {
+  word-break: break-all;
+}
 </style>
