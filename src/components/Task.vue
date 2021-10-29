@@ -99,7 +99,9 @@ import { CircleX } from '@vicons/tabler'
       }
     })
       .then(() => {
-        hasTask.value--
+        if(filesList.value[key].progress < 100) {
+          hasTask.value--
+        }
         filesList.value.splice(key, 1)
       })
   }

@@ -2,8 +2,8 @@
   <div class="list-page">
     <n-alert title="感谢@shabitt" type="info" closable>
       <n-space>
-        <a href="https://t.me/shabitt">作者</a>
-        <a href="https://shimily.notion.site/shimily/f90e8e28b55e423185f44c89c53c573c?v=b69a268a91c946ce9238f947100070a4">地址</a>
+        <a href="https://t.me/shabitt" target="_blank">作者</a>
+        <a href="https://shimily.notion.site/shimily/f90e8e28b55e423185f44c89c53c573c?v=b69a268a91c946ce9238f947100070a4"  target="_blank">地址</a>
       </n-space>
     </n-alert>
     <br />
@@ -23,7 +23,6 @@
 <script setup lang="ts">
 import { ref } from '@vue/reactivity'
 import { h, onMounted } from '@vue/runtime-core'
-import axios from 'axios'
 import { DataTableColumns, NDataTable, NText, NTime, NAlert, NSpace } from 'naive-ui'
 import http, { notionHttp } from '../utils/axios'
 
@@ -40,6 +39,7 @@ const getList = () => {
     list.value = res.data.results
     if(list.value.length) {
       for(let k in list.value[0].properties) {
+        console.log(k)
         columns.value.push({
           title: k,
           key: k,
@@ -48,10 +48,15 @@ const getList = () => {
               placement: 'right'
             },
           },
-          width: k === '链接' ? 600 : undefined,
+          width: k === '名称' ? 600 : 150,
           render: (row:any) => {
             const item = row.properties[k]
             switch (item.type) {
+              case 'rich_text': case 'title':
+                return h('div', {}, {
+                  default: () => item[item.type] && item[item.type].length && item[item.type].map((listItem:any) => listItem.plain_text)
+                })
+                break
               case 'select':
                 return h('div', {
                   style: {
@@ -63,12 +68,7 @@ const getList = () => {
                 return h(NTime, {
                   time: new Date(item.created_time),
                   type: 'date',
-                  format: 'MM-dd hh:mm'
-                })
-                break
-              case 'rich_text': case 'title':
-                return h('div', {}, {
-                  default: () => item[item.type] && item[item.type].length && item[item.type].map((listItem:any) => listItem.plain_text)
+                  format: 'MM-dd HH:MM'
                 })
                 break
               default :

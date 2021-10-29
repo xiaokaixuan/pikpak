@@ -9,6 +9,12 @@
           <n-form-item label="aria2Token：">
             <n-input v-model:value="aria2Data.token" type="password" show-password-on="mousedown"></n-input>
           </n-form-item>
+          <n-form-item label="文件夹设置：">
+            <n-switch v-model:value="aria2Data.dir" >
+              <template #checked>选择文件夹时保存文件夹结构</template>
+              <template #unchecked>选择文件夹时仅保存文件</template>
+            </n-switch>
+          </n-form-item>
           <n-alert title="由于浏览器限制，请按下图设置开始混合模式" type="info"  v-if="aria2Data.host && aria2Data.host.indexOf('https://') === -1 && aria2Data.host.indexOf('http://localhost') == -1 && aria2Data.host.indexOf('http://127.0.0.1') === -1">
             <img src="../assets/aria2-tip-1.png" alt=""> 
             <br />
@@ -43,6 +49,7 @@
           <a href="https://mypikpak.com/" target="_blank" class="n-button">官方网站</a>
           <a href="https://t.me/pikpak_userservice" target="_blank" class="n-button">官方交流群</a>
           <a href="https://github.com/mumuchenchen/pikpak" target="_blank" class="n-button">开源仓库</a>
+          <a href="https://www.tjsky.net/?p=201" target="_blank" class="n-button">部署教程</a>
           <a href="https://t.me/mumuchenchen" target="_blank">问题反馈</a>
         </n-space>
       </n-collapse-item>
@@ -56,7 +63,8 @@ import { onMounted } from '@vue/runtime-core';
 import { NForm, NFormItem, NButton, NInput, NCollapse, NCollapseItem, NSpace, NSwitch, useDialog, NAlert } from 'naive-ui'
 const aria2Data = ref({
   host: '',
-  token: ''
+  token: '',
+  dir: true
 })
 const testAria2 = () => {
   let postData:any = {
@@ -111,6 +119,9 @@ const loginPost = () => {
 }
 onMounted(() => {
   let aria2 = JSON.parse(window.localStorage.getItem('pikpakAria2') || '{}')
+  if(aria2.dir === undefined) {
+    aria2.dir = true
+  }
   if(aria2.host) {
     aria2Data.value = aria2
   }

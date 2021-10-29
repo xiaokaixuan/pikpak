@@ -9,6 +9,8 @@
 
 ## 安装部署
 
+### 安装教程
+  * [去年夏天版教程](https://www.tjsky.net/?p=201)
 ### Github Aciton
 
 ### Github Page

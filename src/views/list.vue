@@ -54,6 +54,16 @@
             剪切所选
           </n-tooltip>
         </div>
+        <div class="toolbar-item" @click="aria2All">
+          <n-tooltip>
+            <template #trigger>
+              <n-icon>
+                <letter-a></letter-a>
+              </n-icon>
+            </template>
+            推送到Aria2
+          </n-tooltip>
+        </div>
         <div class="toolbar-item" @click="copyAll">
           <n-tooltip>
             <template #trigger>
@@ -77,13 +87,20 @@
       </div>
     </div>
     <n-modal v-model:show="showAddUrl">
-      <n-card style="width: 600px;" title="添加链接">
+      <n-card style="width: 600px;" title="添加链接或新建文件夹">
         <template #header-extra>
           <n-icon @click="showAddUrl = false">
             <circle-x></circle-x>
           </n-icon>
         </template>
-        <n-input type="textarea" :rows="6" placeholder="支持Magnet链接和秒传链接(PikPak://PikPak Tutorial.mp4|19682618|0A4E4FC6FA600D9705B9800BA1687C769273BC97)，换行添加多个，秒传链接默认保存到当前文件夹或第一个文件夹不能保存到根目录 Magent链接只能默认保存到My Pack" v-model:value="newUrl"></n-input>
+        <n-alert :show-icon="false" closable title="添加说明">
+          <div>1.支持Magnet链接(magnet:?xt=urn)，Magent链接只能默认保存到My Pack</div>
+          <div>2.支持秒传链接(PikPak://PikPak Tutorial.mp4|19682618|123)秒传链接默认保存到当前文件夹或第一个文件夹不能保存到根目录</div>
+          <div>3.支持新建文件夹（普通格式）</div>
+          <div>4.换行添加多个</div>
+        </n-alert>
+        <br />
+        <n-input type="textarea" :rows="4" placeholder="请按说明填写" v-model:value="newUrl"></n-input>
         <template #action>
           <n-button :block="true" type="primary" :disabled="!newUrl" @click="addUrl">添加</n-button>
         </template>
@@ -139,8 +156,8 @@ import { ref } from '@vue/reactivity';
 import { h, computed, onMounted, watch } from '@vue/runtime-core'
 import http, { notionHttp } from '../utils/axios'
 import { useRoute, useRouter } from 'vue-router'
-import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NTooltip, NSpace, NScrollbar, NSpin, NDropdown, useDialog, } from 'naive-ui'
-import { CirclePlus, CircleX, Dots, Share, Copy as IconCopy, SwitchHorizontal } from '@vicons/tabler'
+import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NTooltip, NSpace, NScrollbar, NSpin, NDropdown, useDialog, NAlert, useNotification, NotificationReactive } from 'naive-ui'
+import { CirclePlus, CircleX, Dots, Share, Copy as IconCopy, SwitchHorizontal, LetterA } from '@vicons/tabler'
 import { byteConvert } from '../utils'
 import PlyrVue from '../components/Plyr.vue'
 import TaskVue from '../components/Task.vue'
@@ -382,6 +399,7 @@ import streamSaver from 'streamsaver'
     copyFiles.value = JSON.parse(window.localStorage.getItem('pikpakCopyFiles') || '[]')
     filesList.value = []
     checkedRowKeys.value = []
+    pageToken.value = ''
     getFileList()
     parentInfo.value = {}
     if(route.params.id) {
@@ -402,6 +420,9 @@ import streamSaver from 'streamsaver'
       columns.value.splice(2, 0, ...smallColums.value)
     }
     let aria2 = JSON.parse(window.localStorage.getItem('pikpakAria2') || '{}')
+    if(aria2.dir === undefined) {
+      aria2.dir = true
+    }
     if(aria2.host) {
       aria2Data.value = aria2
     }
@@ -474,7 +495,7 @@ import streamSaver from 'streamsaver'
                   provider: "UPLOAD_TYPE_UNKNOWN"
               }
           }
-        } else {
+        } else if(url.indexOf('magnet:?xt=urn') === 0) {
           hasTask = true
           postData = {
             kind: "drive#file",
@@ -487,8 +508,14 @@ import streamSaver from 'streamsaver'
             params: {"from":"file"},
             folder_type: "DOWNLOAD"
           }
+        } else {
+          hasHash = true
+          postData = {
+            "kind":"drive#folder",
+            "parent_id": route.params.id || '',
+            "name": url
+          }
         }
-        // {"kind":"drive#folder","parent_id":"VMn5GV_X98Vj4ZiQZQ8hKo6Ho1","name":"1-2"}
         showAddUrl.value = false
         http.post('https://api-drive.mypikpak.com/drive/v1/files', postData)
           .then((res:any) => {
@@ -499,6 +526,7 @@ import streamSaver from 'streamsaver'
           .finally(() => {
             successLength++
             if(successLength === urlList.length) {
+              newUrl.value = ''
               if(hasTask) {
                 taskRef.value.getTask()
               }
@@ -545,6 +573,65 @@ import streamSaver from 'streamsaver'
     copy(text)
     checkedRowKeys.value = []
   }
+  const notification = useNotification()
+  const allLoding = ref(false)
+  const nRef = ref<NotificationReactive>()
+  const getAllFile = async () => {
+    downFileList.value = []
+    allLoding.value = true
+    nRef.value = notification.create({
+      title: '推送到Aria2',
+      closable: false,
+      content: '正在获取全部文件列表'
+    })
+    const checkedRowKeysCopy = JSON.parse(JSON.stringify(checkedRowKeys.value))
+    checkedRowKeys.value = []
+    for(let i in filesList.value) {
+      const item = filesList.value[i]
+      if(checkedRowKeysCopy.indexOf(item.id) !== -1) {
+        if(item.kind === 'drive#file') {
+          downFileList.value.push({
+            id: item.id,
+            name: item.name,
+            parent: ''
+          })
+        } else {
+          await getFloderFile(item.id, '', item.name)
+        }
+      }
+    }
+    nRef.value.content = '共获取到' + downFileList.value.length + '个文件'
+  }
+  const aria2All = async () => {
+    if(allLoding.value) {
+      return false
+    }
+    await getAllFile()
+    if(!aria2Dir.value && aria2Data.value.dir) {
+      await getAria2Dir()
+    }
+    const postOne =  () => {
+      getFile(downFileList.value[0].id)
+        .then(async res => {
+          const data:any = downFileList.value.shift()
+          await aria2Post(res, data.parent)
+          if(nRef.value?.content) {
+            nRef.value.content = nRef.value?.content + '\r\n' + '推送' + data.parent + '/' + data.name + '成功'
+          }
+          if(downFileList.value.length) {
+            setTimeout(() => {
+              postOne()
+            }, 3000)
+          } else {
+            setTimeout(() => {
+              nRef.value?.destroy()
+              allLoding.value = false
+            }, 1000);
+          }
+        })
+    }
+    postOne()
+  }
   const downFile = (id:string) => {
     getFile(id)
       .then((info:any) => {
@@ -580,8 +667,31 @@ import streamSaver from 'streamsaver'
         })
       })
   }
-  const aria2Post = (res:any) => {
-
+  const aria2Dir = ref()
+  const getAria2Dir = () => {
+    let postData:any = {
+        id:'',
+        jsonrpc:'2.0',
+        method:'aria2.getGlobalOption',
+        params:[
+        ]
+    }
+    if(aria2Data.value.token) {
+      postData.params.splice(0, 0, 'token:' + aria2Data.value.token)
+    }
+    fetch(aria2Data.value.host, {
+        method: 'POST',
+        body: JSON.stringify(postData),
+        headers: new Headers({
+        'Content-Type': 'application/json'
+      })
+    })
+      .then(response => response.json())
+      .then(res => {
+        aria2Dir.value = res?.result?.dir || ''
+      })
+  }
+  const aria2Post = (res:any, dir?:string) => {
     let postData:any = {
         id:'',
         jsonrpc:'2.0',
@@ -592,6 +702,9 @@ import streamSaver from 'streamsaver'
               out: res.data.name
             }
         ]
+    }
+    if(dir && aria2Dir.value) {
+      postData.params[1].dir = aria2Dir.value + '/' + dir
     }
     if(aria2Data.value.token) {
       postData.params.splice(0, 0, 'token:' + aria2Data.value.token)
@@ -755,7 +868,7 @@ import streamSaver from 'streamsaver'
     id: string,
     value: string
   } | null>()
-  const namePost = () => [
+  const namePost = () => {
     http.patch('https://api-drive.mypikpak.com/drive/v1/files/' + newName.value?.id, {
       name: newName.value?.value
     })
@@ -765,7 +878,51 @@ import streamSaver from 'streamsaver'
         newName.value = null
         showName.value = false
       })
-  ]
+  }
+  const downFileList = ref<{[key:string]:any}[]>([])
+  const getFloderFile = async (id?:string, page?:string,parent?:string) => {
+    const res:any = await http.get('https://api-drive.mypikpak.com/drive/v1/files', {
+      params: {
+        parent_id: id || undefined,
+        thumbnail_size: 'SIZE_LARGE',
+        with_audit: true,
+        page_token: page || undefined,
+        filters: {
+          "phase": {"eq": "PHASE_TYPE_COMPLETE"},
+          "trashed":{"eq":false}
+        }
+      }
+    })
+    const {files, next_page_token} = res.data
+    if(next_page_token) {
+      await getFloderFile(id, next_page_token, parent)
+    }
+    for(let i in files) {
+      const item = files[i]
+      if(item.kind === 'drive#folder') {
+         await getFloderFile(item.id, '', (parent ? (parent + '/') :  '') + item.name)
+      } else {
+        downFileList.value.push({
+          name: item.name,
+          id: item.id,
+          parent: parent || ''
+        })
+      }
+    }
+    return 1
+  }
+  const getTest = (id:string) => {
+    downFileList.value = []
+     getFloderFile()
+      .then(res => {
+        console.log(res, 11)
+        console.log(downFileList.value.length)
+        downFileList.value.forEach((item) => {
+          console.log(item.name, item.parent)
+      })
+    })
+  }
+  
 </script>
 
 <style>

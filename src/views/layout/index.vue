@@ -101,14 +101,14 @@ import { useRoute, useRouter } from 'vue-router';
       icon: renderIcon(Trash)
     },
     {
-      label: '设置',
-      key: 'setting',
-      icon: renderIcon(Settings)
-    },
-    {
       label: '资源库',
       key: 'share',
       icon: renderIcon(Share)
+    },
+    {
+      label: '设置',
+      key: 'setting',
+      icon: renderIcon(Settings)
     }
   ])
   const userInfo = ref()
