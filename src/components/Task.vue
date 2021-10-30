@@ -3,11 +3,11 @@
     <div class="content " :class="{hide: hide}">
       <div class="status-bar" @click="hide = !hide">
         <div class="status-bar-wrapper">
-          {{hasTask}}项保存中
+          {{filesList?.length || 0}}项保存中
         </div>
       </div>
       <div class="task-list">
-        <n-scrollbar style="max-height: 400px;">
+        <n-scrollbar style="max-height: 400px;"  @scroll="scrollHandle">
           <template v-for="(item, key) in filesList" :key="item.id">
             <div class="task">
               <div class="task-info">
@@ -44,6 +44,9 @@
               </div>
             </div>
           </template>
+          <div class="loading" v-if="loading">
+            <n-spin size="small" />加载中
+          </div>
         </n-scrollbar>
       </div>
       <p class="bottom" v-if="!hide" @click="hide = true">收起</p>
@@ -63,32 +66,34 @@ import { CircleX } from '@vicons/tabler'
   const hasTask = ref(0)
   const timeOut = ref()
   const hide = ref(true)
+  const pageToken = ref()
   const getTask = () => {
-    // {"id":{"in":"VMmlkQ3qc5fkx0UOGOIgBYmxo1,VMmljjKKc5fkx0UOGOIgBY2uo1"}}
+    loading.value = true
     http.get('https://api-drive.mypikpak.com/drive/v1/tasks', {
       params: {
         type: 'offline',
-        page_token: '',
-        filters: {},
+        filters: {
+          "phase": {"eq": "PHASE_TYPE_RUNNING"}
+        },
+        page_token: pageToken.value || undefined,
         thumbnail_size: 'SIZE_LARGE',
         with: 'reference_resource'
       }
     })
       .then((res:any) => {
-        const {tasks} = res.data
-        hasTask.value = 0
+        const {tasks, next_page_token} = res.data
         timeOut.value && clearTimeout(timeOut.value)
-        for(let i in tasks) {
-          if(tasks[i].progress < 100) {
-            hasTask.value++
-          }
+        if(!pageToken.value) {
+          filesList.value = []
         }
-        filesList.value = tasks
-        if(hasTask.value) {
+        filesList.value = filesList.value.concat(tasks)
+        pageToken.value = next_page_token
+        if(filesList.value.length) {
           timeOut.value = setTimeout(() => {
             getTask()
           }, 60000)
         }
+        loading.value = false
       })
   }
   const deleteTask = (key:number) => {
@@ -105,6 +110,14 @@ import { CircleX } from '@vicons/tabler'
         filesList.value.splice(key, 1)
       })
   }
+  const scrollHandle = (e:any) =>  {
+    if(e.target.offsetHeight - e.target.scrollTop < 30) {
+      if(pageToken.value && !loading.value) {
+        getTask()
+      }
+    }
+  }
+  
   onMounted(getTask)
   onUnmounted(() => {
     timeOut.value && clearTimeout(timeOut.value)

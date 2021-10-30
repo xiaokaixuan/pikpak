@@ -9,7 +9,12 @@
         </n-breadcrumb>
       </div>
     </div>
-    <n-data-table v-model:checked-row-keys="checkedRowKeys"  :row-key="row => row.id" :data="filesList" size="small" :columns="columns" :bordered="false" :loading="loading"></n-data-table>
+    <n-scrollbar style="max-height: calc(100vh - 190px);" @scroll="scrollHandle">
+      <n-data-table v-model:checked-row-keys="checkedRowKeys"  :row-key="row => row.id" :data="filesList" size="small" :columns="columns" :bordered="false"></n-data-table>
+      <div class="loading" v-if="loading">
+        <n-spin size="small" />加载中
+      </div>
+    </n-scrollbar>
     <div class="outer-wrapper static show" v-if="checkedRowKeys.length">
       <div class="toolbar-wrapper">
         <div class="toolbar-item" @click="unTransh(checkedRowKeys)">
@@ -41,7 +46,7 @@
 import { ref } from '@vue/reactivity';
 import { h, onMounted } from '@vue/runtime-core'
 import http from '../utils/axios'
-import { DataTableColumns, NDataTable, NTime, NEllipsis, NBreadcrumb, NBreadcrumbItem, NSpace, NText, NPopconfirm, NIcon, NTooltip } from 'naive-ui'
+import { DataTableColumns, NDataTable, NTime, NEllipsis, NBreadcrumb, NBreadcrumbItem, NSpace, NText, NPopconfirm, NIcon, NTooltip, NScrollbar } from 'naive-ui'
 import { byteConvert } from '../utils'
 import { CircleX, CornerUpLeftDouble } from '@vicons/tabler'
 
@@ -133,6 +138,7 @@ import { CircleX, CornerUpLeftDouble } from '@vicons/tabler'
     }
   ])
   const loading = ref(false)
+  const pageToken = ref()
   const getFileList = () => {
     loading.value = true
     http.get('https://api-drive.mypikpak.com/drive/v1/files', {
@@ -140,6 +146,7 @@ import { CircleX, CornerUpLeftDouble } from '@vicons/tabler'
         parent_id: '*',
         thumbnail_size: 'SIZE_LARGE',
         with_audit: true,
+        page_token: pageToken.value || undefined,
         filters: {
           "phase": {"eq": "PHASE_TYPE_COMPLETE"},
           "trashed":{"eq":true}
@@ -148,7 +155,11 @@ import { CircleX, CornerUpLeftDouble } from '@vicons/tabler'
     })
       .then((res:any) => {
         const {data} = res
-        filesList.value = data.files
+        if(!pageToken.value) {
+          filesList.value = []
+        }
+        filesList.value = filesList.value.concat(data.files)
+        pageToken.value = data.next_page_token
       })
       .finally(() => {
         loading.value = false
@@ -170,6 +181,14 @@ import { CircleX, CornerUpLeftDouble } from '@vicons/tabler'
       .then(() => {
         getFileList()
       })
+  }
+  
+  const scrollHandle = (e:any) =>  {
+    if(e.target.offsetHeight - e.target.scrollTop < 30) {
+      if(pageToken.value && !loading.value) {
+        getFileList()
+      }
+    }
   }
   onMounted(() => {
     const width = document.body.clientWidth

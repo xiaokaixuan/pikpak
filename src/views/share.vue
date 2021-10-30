@@ -60,7 +60,7 @@ const getList = () => {
                 placement: 'right'
               },
             },
-            width: k === '名称' ? 600 : 150,
+            // width: k === '名称' ? 600 : 150,
             render: (row:any) => {
               const item = row.properties[k]
               switch (item.type) {
