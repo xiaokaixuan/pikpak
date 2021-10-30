@@ -153,7 +153,7 @@
 
 <script setup lang="ts">
 import { ref } from '@vue/reactivity';
-import { h, computed, onMounted, watch } from '@vue/runtime-core'
+import { h, computed, onMounted, watch, nextTick } from '@vue/runtime-core'
 import http, { notionHttp } from '../utils/axios'
 import { useRoute, useRouter } from 'vue-router'
 import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NTooltip, NSpace, NScrollbar, NSpin, NDropdown, useDialog, NAlert, useNotification, NotificationReactive } from 'naive-ui'
@@ -552,35 +552,50 @@ import streamSaver from 'streamsaver'
       })
   }
   const copy = (value:string) => {
-    const fakeElement = document.createElement('button')
-    const clipboard = new ClipboardJS(fakeElement, {
-      text: () => value,
-      action: () => 'copy',
+    nextTick(() => {
+      const fakeElement = document.createElement('button')
+      const clipboard = new ClipboardJS(fakeElement, {
+        text: () => value,
+        action: () => 'copy',
+      })
+      clipboard.on('success', (e) => {
+        window.$message.success('复制成功')
+        clipboard.destroy()
+      })
+      clipboard.on('error', (e) => {
+        window.$message.error('复制失败，您可以F12打开控制台手动复制，或重新操作')
+        console.log(e.text)
+      })
+      fakeElement.click()
     })
-    clipboard.on('success', (e) => {
-      window.$message.success('复制成功')
-      clipboard.destroy()
-    })
-    fakeElement.click()
   }
-  const copyAll = () => {
+  const copyAll = async () => {
     let text = ''
-    filesList.value.forEach((item:FileInfo) => {
-      if(checkedRowKeys.value.indexOf(item.id) !== -1 && item.size > 0) {
-        text = text + `PikPak://${item.name}|${item.size}|${item.hash}` + '\n'
+    if(allLoding.value) {
+      return false
+    }
+    await getAllFile('分享秒传')
+    for(let i in downFileList.value) {
+      const item = downFileList.value[i]
+      if(nRef.value) {
+        nRef.value.content = nRef.value.content + '\r\n' + '获取' + item.parent + '/' + item.name + '成功'
       }
-    })
+      text = text + `PikPak://${item.name}|${item.size}|${item.hash}` + '\n'
+    }
     copy(text)
-    checkedRowKeys.value = []
+    setTimeout(() => {
+      allLoding.value = false
+      nRef.value?.destroy()
+    }, 1000);
   }
   const notification = useNotification()
   const allLoding = ref(false)
   const nRef = ref<NotificationReactive>()
-  const getAllFile = async () => {
+  const getAllFile = async (title?:string) => {
     downFileList.value = []
     allLoding.value = true
     nRef.value = notification.create({
-      title: '推送到Aria2',
+      title: title || '推送到Aria2',
       closable: false,
       content: '正在获取全部文件列表'
     })
@@ -593,7 +608,9 @@ import streamSaver from 'streamsaver'
           downFileList.value.push({
             id: item.id,
             name: item.name,
-            parent: ''
+            parent: '',
+            size: item.size,
+            hash: item.hash
           })
         } else {
           await getFloderFile(item.id, '', item.name)
@@ -905,7 +922,9 @@ import streamSaver from 'streamsaver'
         downFileList.value.push({
           name: item.name,
           id: item.id,
-          parent: parent || ''
+          parent: parent || '',
+          size: item.size,
+          hash: item.hash
         })
       }
     }

@@ -15,81 +15,94 @@
       {{uploadFolder.name}}
     </n-alert>
     <br />
-
-    <n-data-table :bordered="false" size="small" :data="list" :loading="loading" :columns="columns"></n-data-table>
+    
+    <n-scrollbar style="max-height: calc(100vh - 300px);" @scroll="scrollHandle">
+      <n-data-table :bordered="false" size="small" :data="list" :columns="columns"></n-data-table>
+      <div class="loading" v-if="loading">
+        <n-spin size="small" />加载中
+      </div>
+    </n-scrollbar>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from '@vue/reactivity'
 import { h, onMounted } from '@vue/runtime-core'
-import { DataTableColumns, NDataTable, NText, NTime, NAlert, NSpace } from 'naive-ui'
+import { DataTableColumns, NDataTable, NText, NTime, NAlert, NSpace, NScrollbar, NSpin } from 'naive-ui'
 import http, { notionHttp } from '../utils/axios'
 
 const columns = ref<DataTableColumns>([])
 
 const list = ref()
 const loading = ref(false)
-
+const nextCursor = ref()
 const getList = () => {
   loading.value = true
-  notionHttp.post('https://api.notion.com/v1/databases/f90e8e28b55e423185f44c89c53c573c/query')
+  notionHttp.post('https://api.notion.com/v1/databases/f90e8e28b55e423185f44c89c53c573c/query', {
+    start_cursor: nextCursor.value || undefined,
+    page_size: 50
+  })
   .then((res:any) => {
     loading.value = false
-    list.value = res.data.results
-    if(list.value.length) {
-      for(let k in list.value[0].properties) {
-        console.log(k)
-        columns.value.push({
-          title: k,
-          key: k,
-          ellipsis: {
-            tooltip: {
-              placement: 'right'
-            },
-          },
-          width: k === '名称' ? 600 : 150,
-          render: (row:any) => {
-            const item = row.properties[k]
-            switch (item.type) {
-              case 'rich_text': case 'title':
-                return h('div', {}, {
-                  default: () => item[item.type] && item[item.type].length && item[item.type].map((listItem:any) => listItem.plain_text)
-                })
-                break
-              case 'select':
-                return h('div', {
-                  style: {
-                    color: row.properties[k].select.color
-                  }
-                }, item.select.name)
-                break
-              case 'created_time':
-                return h(NTime, {
-                  time: new Date(item.created_time),
-                  type: 'date',
-                  format: 'MM-dd HH:MM'
-                })
-                break
-              default :
-                return '--'
-            }
-          }
-        })
-      }
+    if(!nextCursor.value) {
+      list.value = []
     }
-    columns.value.push({
-      title: '操作',
-      key: 'action',
-      width: 80,
-      align: 'right',
-      render: (row:any) => h(NText, {
-        type: 'primary',
-        onClick: () => {
-          addUrl(row.properties['链接'].rich_text[0].plain_text)
+    list.value = list.value.concat(res.data.results)
+    nextCursor.value = res.data.has_more && res.data.next_cursor
+    if(columns.value.length == 0) {
+      if(list.value.length) {
+        for(let k in list.value[0].properties) {
+          columns.value.push({
+            title: k,
+            key: k,
+            ellipsis: {
+              tooltip: {
+                placement: 'right'
+              },
+            },
+            width: k === '名称' ? 600 : 150,
+            render: (row:any) => {
+              const item = row.properties[k]
+              switch (item.type) {
+                case 'rich_text': case 'title':
+                  return h('div', {}, {
+                    default: () => item[item.type] && item[item.type].length && item[item.type].map((listItem:any) => listItem.plain_text)
+                  })
+                  break
+                case 'select':
+                  return h('div', {
+                    style: {
+                      color: row.properties[k].select.color
+                    }
+                  }, item.select.name)
+                  break
+                case 'created_time':
+                  return h(NTime, {
+                    time: new Date(item.created_time),
+                    type: 'date',
+                    format: 'MM-dd HH:MM'
+                  })
+                  break
+                default :
+                  return '--'
+              }
+            }
+          })
         }
-      }, {default: () => '保存'})
-    })
+      }
+      columns.value.push({
+        title: '操作',
+        key: 'action',
+        width: 80,
+        align: 'right',
+        render: (row:any) => h(NText, {
+          type: 'primary',
+          onClick: () => {
+            addUrl(row.properties['链接'].rich_text[0].plain_text)
+          }
+        }, {default: () => '保存'})
+      })
+    }
   })
 }
 const uploadFolder = ref()
@@ -136,8 +149,16 @@ const addUrl = (url:string) => {
     })
 }
 
+const scrollHandle = (e:any) =>  {
+  if(e.target.offsetHeight - e.target.scrollTop < 30) {
+    if(nextCursor.value && !loading.value) {
+      getList()
+    }
+  }
+}
 onMounted(() => {
   uploadFolder.value = getUploadFolder()
+  nextCursor.value = ''
   getList()
 })
 </script>
