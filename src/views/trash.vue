@@ -55,7 +55,7 @@ import { CircleX, CornerUpLeftDouble } from '@vicons/tabler'
       render: (row) => {
         return h(NTime, {
           time: new Date(String(row.delete_time) || ''),
-          format: 'MM-dd hh:mm'
+          format: 'MM-dd HH:MM'
         })
       },
       className: 'modified_time',

@@ -52,6 +52,10 @@
           <a href="https://www.tjsky.net/?p=201" target="_blank" class="n-button">部署教程</a>
           <a href="https://t.me/mumuchenchen" target="_blank">问题反馈</a>
         </n-space>
+        <br />
+      </n-collapse-item>
+      <n-collapse-item title="功能列表" name="3">
+        <n-log :lines="logs"></n-log>
       </n-collapse-item>
     </n-collapse>
   </div>
@@ -60,7 +64,12 @@
 <script setup lang="ts">
 import { ref } from '@vue/reactivity';
 import { onMounted } from '@vue/runtime-core';
-import { NForm, NFormItem, NButton, NInput, NCollapse, NCollapseItem, NSpace, NSwitch, useDialog, NAlert } from 'naive-ui'
+import { NForm, NFormItem, NButton, NInput, NCollapse, NCollapseItem, NSpace, NSwitch, useDialog, NAlert, NLog } from 'naive-ui'
+const logs = ref([
+  '自定义菜单',
+  '资源库分页，分享秒传支持文件及',
+  '....'
+])
 const aria2Data = ref({
   host: '',
   token: '',

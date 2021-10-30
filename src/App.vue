@@ -16,7 +16,10 @@ import MessageContent from './components/MessageContent.vue';
       fontSize: '16px'
     },
     Dropdown: {
-      optionTextColorHover: '#fff'
+      optionTextColorHover: '#fff',
+    },
+    InternalSelectMenu: {
+      optionTextColorActive: '#fff',
     }
   })
 </script>

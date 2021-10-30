@@ -19,6 +19,9 @@
           <n-button v-if="copyFiles?.length" @click="copyPost">
             粘贴已复制{{copyFiles.length}}项资源
           </n-button>
+          <n-button  @click="showUserMenu = true">
+            添加自定义菜单
+          </n-button>
           <n-icon :color="themeVars.primaryColor"  @click="showAddUrl = true">
             <circle-plus></circle-plus>
           </n-icon>
@@ -148,6 +151,43 @@
         </template>
       </n-card>
     </n-modal>
+    <n-modal v-model:show="showUserMenu">
+      <n-card style="width: 600px;" title="自定义菜单">
+        <template #header-extra>
+          <n-icon @click="showUserMenu = false">
+            <circle-x></circle-x>
+          </n-icon>
+        </template>
+        <n-form label-width="160px" label-align="left" label-placement="left">
+          <n-form-item label="自定义菜单列表：">
+            <n-space>
+              <template v-for="(item, key) in userMenu" :key="key">
+                <n-tag :closable="true" @close="removeUserMenu(key)">{{item.name}}</n-tag>
+              </template>
+            </n-space>
+          </n-form-item>
+          <n-form-item label="自定义菜单名称：">
+            <n-input v-model:value="newMenu.name"></n-input>
+          </n-form-item>
+          <n-form-item label="自定义菜单类型：">
+            <n-select :options="menuTypeList" v-model:value="newMenu.type"></n-select>
+          </n-form-item>
+          <n-form-item label="自定义菜单可插入：">
+            <n-space>
+              <template v-for="(item,k) in menuTextList" :key="k">
+                <n-button @click="newMenu.content = newMenu.content + '{{' + k + '}}'">{{item}}</n-button>
+              </template>
+            </n-space>
+          </n-form-item>
+          <n-form-item label="自定义菜单内容：">
+            <n-input type="textarea" v-model:value="newMenu.content"></n-input>
+          </n-form-item>
+          <n-form-item>
+            <n-button type="primary" @click="addUserMenu">添加</n-button>
+          </n-form-item>
+        </n-form>
+      </n-card>
+    </n-modal>
   </div>
 </template>
 
@@ -156,13 +196,14 @@ import { ref } from '@vue/reactivity';
 import { h, computed, onMounted, watch, nextTick } from '@vue/runtime-core'
 import http, { notionHttp } from '../utils/axios'
 import { useRoute, useRouter } from 'vue-router'
-import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NTooltip, NSpace, NScrollbar, NSpin, NDropdown, useDialog, NAlert, useNotification, NotificationReactive } from 'naive-ui'
+import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NTooltip, NSpace, NScrollbar, NSpin, NDropdown, useDialog, NAlert, useNotification, NotificationReactive, NSelect, NForm, NFormItem, NTag } from 'naive-ui'
 import { CirclePlus, CircleX, Dots, Share, Copy as IconCopy, SwitchHorizontal, LetterA } from '@vicons/tabler'
 import { byteConvert } from '../utils'
 import PlyrVue from '../components/Plyr.vue'
 import TaskVue from '../components/Task.vue'
 import ClipboardJS from 'clipboard'
 import streamSaver from 'streamsaver'
+import { DropdownMixedOption } from 'naive-ui/lib/dropdown/src/interface';
   const filesList = ref()
   const route = useRoute()
   const router = useRouter()
@@ -188,7 +229,7 @@ import streamSaver from 'streamsaver'
       render: (row) => {
         return h(NTime, {
           time: new Date(String(row.modified_time) || ''),
-          format: 'MM-dd hh:mm',
+          format: 'MM-dd HH:MM',
         })
       },
       className: 'modified_time',
@@ -256,58 +297,11 @@ import streamSaver from 'streamsaver'
       key: 'action',
       width: 60,
       align: 'right',
-      render: (row:any) =>   h(NDropdown,{
+      render: (row:any) =>   h(NDropdown, {
         trigger: 'click',
         placement: 'bottom-end',
-        options: [
-          {
-            label: '重命名',
-            key: 'name',
-          },
-          {
-            label: '复制',
-            key: 'batchCopy',
-          },
-          {
-            label: '剪切',
-            key: 'batchMove',
-          },
-          {
-            label: '直接下载',
-            key: 'down',
-            disabled: row.size <= 0
-          },
-          {
-            label: '复制下载链接',
-            key: 'copyDown',
-            disabled: row.size <= 0
-          },
-          {
-            label: '推送到Aria2',
-            key: 'aria2Post',
-            disabled: row.size <= 0 || !aria2Data.value || !aria2Data.value.host
-          },
-          {
-            label: '复制秒传',
-            key: 'code',
-            disabled: !row.hash
-          },
-          {
-            label: '设为默认目录',
-            key: 'base',
-            disabled: row.kind !== 'drive#folder'
-          },
-          {
-            label: '分享到资源库',
-            key: 'share',
-            disabled: !row.hash
-          },
-          {
-            label: '删除',
-            key: 'delete'
-          }
-        ],
-        onSelect: (key) => {
+        options: getFileActions(row),
+        onSelect: (key:string) => {
           switch (key) {
             case 'name':
               nameModelSHow(row)
@@ -354,6 +348,23 @@ import streamSaver from 'streamsaver'
                 })
               break
             default:
+              if(key.indexOf('user') !== -1) {
+                const userMenuKey = Number(key.replace('user-', ''))
+                const keyMenu = userMenu.value[userMenuKey]
+                if(keyMenu) {
+                  getFile(row.id)
+                    .then((res:any) => {
+                      const render =  (template:string) => {
+                        return template.replace(/\{\{(.*?)\}\}/g, (match, key) => res.data[key.trim()]);
+                      }
+                      if(keyMenu.type === 'a') {
+                        window.open(render(keyMenu.content), '_target')
+                      } else if(keyMenu.type === 'copy') {
+                        copy(render(keyMenu.content))
+                      }
+                    })
+                }
+              }
               break
           }
         }
@@ -397,6 +408,7 @@ import streamSaver from 'streamsaver'
   const initPage = () => {
     moveFiles.value = JSON.parse(window.localStorage.getItem('pikpakMoveFiles') || '[]')
     copyFiles.value = JSON.parse(window.localStorage.getItem('pikpakCopyFiles') || '[]')
+    userMenu.value = JSON.parse(window.localStorage.getItem('pikpakUserMenu') || '[]')
     filesList.value = []
     checkedRowKeys.value = []
     pageToken.value = ''
@@ -941,7 +953,111 @@ import streamSaver from 'streamsaver'
       })
     })
   }
-  
+  const menuTypeList = ref([
+    {
+      label: "链接",
+      value: 'a',
+    },
+    {
+      label: "复制",
+      value: 'copy',
+    },
+  ])
+  const menuTextList = ref({
+    web_content_link: '链接',
+    name: '名称',
+    size: '大小',
+    hash: '文件HASH值'
+  })
+  const newMenu = ref<{
+    type: string,
+    content: string,
+    name: string
+  }>({
+    type: 'a',
+    content: '',
+    name: ''
+  })
+  const showUserMenu = ref(false)
+  const userMenu = ref<typeof newMenu.value[]>([])
+  const addUserMenu = () => {
+    userMenu.value.push(JSON.parse(JSON.stringify(newMenu.value)))
+    newMenu.value = {
+      type: 'a',
+      content: '',
+      name: ''
+    }
+    window.localStorage.setItem('pikpakUserMenu', JSON.stringify(userMenu.value))
+  }
+  const removeUserMenu = (key:number) => {
+    userMenu.value.splice(key, 1)
+    window.localStorage.setItem('pikpakUserMenu', JSON.stringify(userMenu.value))
+  }
+  const getFileActions = (row:any) => {
+    const options:DropdownMixedOption[] = [
+      {
+        label: '重命名',
+        key: 'name',
+      },
+      {
+        label: '复制',
+        key: 'batchCopy',
+      },
+      {
+        label: '剪切',
+        key: 'batchMove',
+      },
+      {
+        label: '直接下载',
+        key: 'down',
+        disabled: row.size <= 0
+      },
+      {
+        label: '复制下载链接',
+        key: 'copyDown',
+        disabled: row.size <= 0
+      },
+      {
+        label: '推送到Aria2',
+        key: 'aria2Post',
+        disabled: row.size <= 0 || !aria2Data.value || !aria2Data.value.host
+      },
+      {
+        label: '复制秒传',
+        key: 'code',
+        disabled: !row.hash
+      },
+      {
+        label: '设为默认目录',
+        key: 'base',
+        disabled: row.kind !== 'drive#folder'
+      },
+      {
+        label: '分享到资源库',
+        key: 'share',
+        disabled: !row.hash
+      },
+      {
+        label: '删除',
+        key: 'delete'
+      }
+    ]
+    if(row.kind !== 'drive#folder') {
+      if(userMenu.value.length) {
+        options.push({
+          type: 'divider',
+          key: 'd1'
+        })
+        userMenu.value.forEach((item, key) => {
+          options.push({
+            label: item.name,
+            key: 'user-' + key
+          })
+        })
+      }
+    }
+    return options
+  }
 </script>
 
 <style>
