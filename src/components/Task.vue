@@ -3,7 +3,7 @@
     <div class="content " :class="{hide: hide}">
       <div class="status-bar" @click="hide = !hide">
         <div class="status-bar-wrapper">
-          {{filesList?.length || 0}}项保存中
+          {{filesList?.length || 0}}项保存中 &nbsp;  <n-spin size="small" v-if="loading"/>
         </div>
       </div>
       <div class="task-list">
@@ -44,9 +44,6 @@
               </div>
             </div>
           </template>
-          <div class="loading" v-if="loading">
-            <n-spin size="small" />加载中
-          </div>
         </n-scrollbar>
       </div>
       <p class="bottom" v-if="!hide" @click="hide = true">收起</p>
@@ -56,7 +53,7 @@
 
 <script setup lang="ts">
 import { ref } from '@vue/reactivity';
-import { onBeforeUnmount, onMounted, onUnmounted } from '@vue/runtime-core'
+import { onMounted, onUnmounted, watch } from '@vue/runtime-core'
 import http from '../utils/axios'
 import { NEllipsis, NScrollbar, NProgress, NIcon, NPopconfirm, NSpin } from 'naive-ui'
 import { byteConvert } from '../utils'
@@ -88,10 +85,10 @@ import { CircleX } from '@vicons/tabler'
         }
         filesList.value = filesList.value.concat(tasks)
         pageToken.value = next_page_token
-        if(filesList.value.length) {
+        if(filesList.value.length && !hide.value) {
           timeOut.value = setTimeout(() => {
             getTask()
-          }, 60000)
+          }, 30000)
         }
         loading.value = false
       })
@@ -117,7 +114,13 @@ import { CircleX } from '@vicons/tabler'
       }
     }
   }
-  
+  watch(hide, () => {
+    if(hide.value && timeOut.value) {
+      clearTimeout(timeOut.value)
+    } else {
+      getTask()
+    }
+  })
   onMounted(getTask)
   onUnmounted(() => {
     timeOut.value && clearTimeout(timeOut.value)

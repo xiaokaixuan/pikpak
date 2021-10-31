@@ -66,6 +66,7 @@ import { ref } from '@vue/reactivity';
 import { onMounted } from '@vue/runtime-core';
 import { NForm, NFormItem, NButton, NInput, NCollapse, NCollapseItem, NSpace, NSwitch, useDialog, NAlert, NLog } from 'naive-ui'
 const logs = ref([
+  '修改传输自动请求方式',
   '传输只显示保存中',
   '自定义菜单',
   '资源库分页，分享秒传支持文件及',
