@@ -3,6 +3,7 @@ import App from './App.vue'
 import router from './router'
 import http from './utils/axios'
 import elementResizeDetectorMaker from 'element-resize-detector'
+import VueGtag from 'vue-gtag'
 
 const app = createApp(App)
 app.directive('resize', {
@@ -25,4 +26,10 @@ app.directive('resize', {
   }
 })
 app.config.globalProperties.$http = http
-app.use(router).mount('#app')
+app.use(router)
+app.use(VueGtag, {
+  config: { 
+    id: "G-0TE9CBD37K",
+  },
+}, router);
+app.mount('#app')

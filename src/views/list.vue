@@ -203,7 +203,7 @@ import PlyrVue from '../components/Plyr.vue'
 import TaskVue from '../components/Task.vue'
 import ClipboardJS from 'clipboard'
 import streamSaver from 'streamsaver'
-import { DropdownMixedOption } from 'naive-ui/lib/dropdown/src/interface';
+import { DropdownMixedOption } from 'naive-ui/lib/dropdown/src/interface'
   const filesList = ref()
   const route = useRoute()
   const router = useRouter()

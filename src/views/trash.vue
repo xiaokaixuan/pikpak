@@ -46,7 +46,7 @@
 import { ref } from '@vue/reactivity';
 import { h, onMounted } from '@vue/runtime-core'
 import http from '../utils/axios'
-import { DataTableColumns, NDataTable, NTime, NEllipsis, NBreadcrumb, NBreadcrumbItem, NSpace, NText, NPopconfirm, NIcon, NTooltip, NScrollbar } from 'naive-ui'
+import { DataTableColumns, NDataTable, NTime, NEllipsis, NBreadcrumb, NBreadcrumbItem, NSpace, NText, NPopconfirm, NIcon, NTooltip, NScrollbar, NSpin } from 'naive-ui'
 import { byteConvert } from '../utils'
 import { CircleX, CornerUpLeftDouble } from '@vicons/tabler'
 

@@ -58,7 +58,7 @@
 import { ref } from '@vue/reactivity';
 import { onBeforeUnmount, onMounted, onUnmounted } from '@vue/runtime-core'
 import http from '../utils/axios'
-import { NEllipsis, NScrollbar, NProgress, NIcon, NPopconfirm } from 'naive-ui'
+import { NEllipsis, NScrollbar, NProgress, NIcon, NPopconfirm, NSpin } from 'naive-ui'
 import { byteConvert } from '../utils'
 import { CircleX } from '@vicons/tabler'
   const filesList = ref()
