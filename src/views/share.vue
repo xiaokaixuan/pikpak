@@ -52,42 +52,44 @@ const getList = () => {
     if(columns.value.length == 0) {
       if(list.value.length) {
         for(let k in list.value[0].properties) {
-          columns.value.push({
-            title: k,
-            key: k,
-            ellipsis: {
-              tooltip: {
-                placement: 'right'
+          if(k !== '发布人' && k !== '发布日期' && k !== '分类' && k !== '标签') {
+            columns.value.push({
+              title: k,
+              key: k,
+              ellipsis: {
+                tooltip: {
+                  placement: k === '名称' ? 'right' : 'bottom'
+                },
               },
-            },
-            // width: k === '名称' ? 600 : 150,
-            render: (row:any) => {
-              const item = row.properties[k]
-              switch (item.type) {
-                case 'rich_text': case 'title':
-                  return h('div', {}, {
-                    default: () => item[item.type] && item[item.type].length && item[item.type].map((listItem:any) => listItem.plain_text)
-                  })
-                  break
-                case 'select':
-                  return h('div', {
-                    style: {
-                      color: row.properties[k].select.color
-                    }
-                  }, item.select.name)
-                  break
-                case 'created_time':
-                  return h(NTime, {
-                    time: new Date(item.created_time),
-                    type: 'date',
-                    format: 'MM-dd HH:MM'
-                  })
-                  break
-                default :
-                  return '--'
+              width: k === '大小' ? 100 : (k === '名称' ? 1000 : undefined),
+              render: (row:any) => {
+                const item = row.properties[k]
+                switch (item.type) {
+                  case 'rich_text': case 'title':
+                    return h('div', {}, {
+                      default: () => item[item.type] && item[item.type].length && item[item.type].map((listItem:any) => listItem.plain_text)
+                    })
+                    break
+                  case 'select':
+                    return h('div', {
+                      style: {
+                        color: row.properties[k].select.color
+                      }
+                    }, item.select.name)
+                    break
+                  case 'created_time':
+                    return h(NTime, {
+                      time: new Date(item.created_time),
+                      type: 'date',
+                      format: 'MM-dd HH:MM'
+                    })
+                    break
+                  default :
+                    return '--'
+                }
               }
-            }
-          })
+            })
+          }
         }
       }
       columns.value.push({
@@ -162,3 +164,16 @@ onMounted(() => {
   getList()
 })
 </script>
+
+<style>
+
+.list-page .loading {
+  margin-top: 20px;
+  text-align: center;
+  color: rgba(37, 38, 43, 0.36);
+}
+.list-page .loading .n-spin-body {
+  vertical-align: middle;
+  margin-right: 10px;
+}
+</style>
