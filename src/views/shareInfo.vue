@@ -179,7 +179,7 @@ const saveFile = () => {
       })
 }
 const openPot = () => {
-  window.open('potplayer://' + shareInfo.value.web_content_link)
+  window.open('potplayer://' + shareInfo.value.info.web_content_link)
 }
 const goHome = () => {
   window.location.href = './'
