@@ -188,6 +188,27 @@
         </n-form>
       </n-card>
     </n-modal>
+
+    <n-modal v-model:show="showSharePikPak">
+      <n-card style="width: 600px;" title="分享">
+        <template #header-extra>
+          <n-icon @click="showSharePikPak = false">
+            <circle-x></circle-x>
+          </n-icon>
+        </template>
+        <n-alert type="info" :title="'确定分享' + sharePikpak.name + '？'">
+          <n-text type="error">
+            分享链接有效期为24小时
+          </n-text>
+        </n-alert>
+        <br/>
+        <n-input placeholder="分享密码" type="password" show-password-on="mousedown" v-model:value="sharePikPakPassword"></n-input>
+
+        <template #action>
+          <n-button :block="true" type="primary" :loading="sharePikPakPostLoading" @click="sharePikPakPost">获取分享链接</n-button>
+        </template>
+      </n-card>
+    </n-modal>
   </div>
 </template>
 
@@ -196,7 +217,7 @@ import { ref } from '@vue/reactivity';
 import { h, computed, onMounted, watch, nextTick } from '@vue/runtime-core'
 import http, { notionHttp } from '../utils/axios'
 import { useRoute, useRouter } from 'vue-router'
-import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NTooltip, NSpace, NScrollbar, NSpin, NDropdown, useDialog, NAlert, useNotification, NotificationReactive, NSelect, NForm, NFormItem, NTag } from 'naive-ui'
+import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NTooltip, NSpace, NScrollbar, NSpin, NDropdown, useDialog, NAlert, useNotification, NotificationReactive, NSelect, NForm, NFormItem, NTag, NText } from 'naive-ui'
 import { CirclePlus, CircleX, Dots, Share, Copy as IconCopy, SwitchHorizontal, LetterA } from '@vicons/tabler'
 import { byteConvert } from '../utils'
 import PlyrVue from '../components/Plyr.vue'
@@ -204,6 +225,7 @@ import TaskVue from '../components/Task.vue'
 import ClipboardJS from 'clipboard'
 import streamSaver from 'streamsaver'
 import { DropdownMixedOption } from 'naive-ui/lib/dropdown/src/interface'
+import axios from 'axios';
   const filesList = ref()
   const route = useRoute()
   const router = useRouter()
@@ -297,83 +319,146 @@ import { DropdownMixedOption } from 'naive-ui/lib/dropdown/src/interface'
       key: 'action',
       width: 60,
       align: 'right',
-      render: (row:any) =>   h(NDropdown, {
-        trigger: 'click',
-        placement: 'bottom-end',
-        options: getFileActions(row),
-        onSelect: (key:string) => {
-          switch (key) {
-            case 'name':
-              nameModelSHow(row)
-                break
-            case 'batchCopy':
-              batchCopy([row.id])
-              break
-            case 'batchMove':
-              batchMove([row.id])
-              break
-            case 'down':
-              downFile(row.id)
-              break
-            case 'copyDown':
-              getFile(row.id)
-                .then((res:any) => {
-                  copy(res.data.web_content_link)
-                })
-              break
-            case 'aria2Post':
-              getFile(row.id)
-                .then((res:any) => {
-                  aria2Post(res)
-                })
-              break
-            case 'code':
-              copy(`PikPak://${row.name}|${row.size}|${row.hash}`)
-              break
-            case 'base':
-              window.localStorage.setItem('pikpakUploadFolder', JSON.stringify(row))
-              break
-            case 'share':
-              shareUrl(row)
-              break
-            case 'delete': 
+      render: (row:any) => h(NSpace, {
+        justify: "end"
+      }, {
+        default: () => [
+          !samllPage.value && h(NText, {
+            type: 'primary',
+            onClick: () => nameModelSHow(row)
+          }, {
+            default: () => '重命名'
+          }),
+          !samllPage.value && h(NText, {
+            type: 'primary',
+            onClick: () => batchCopy([row.id])
+          }, {
+            default: () => '复制'
+          }),
+          !samllPage.value && h(NText, {
+            type: 'primary',
+            onClick: () => batchMove([row.id])
+          }, {
+            default: () => '剪贴'
+          }),
+          !samllPage.value && row.kind === 'drive#file' && h(NText, {
+            type: 'primary',
+            onClick: () => downFile(row.id)
+          }, {
+            default: () => '下载'
+          }),
+          !samllPage.value && row.kind === 'drive#file' && h(NText, {
+            type: 'primary',
+            onClick: () => {
+              sharePikPakPassword.value = ''
+              sharePikpak.value = row
+              sharePikPakUrl.value = ''
+              showSharePikPak.value = true
+            }
+          }, {
+            default: () => '分享'
+          }),
+          !samllPage.value && h(NText, {
+            type: 'primary',
+            onClick: () => {
               dialog.warning({
-                  title: '警告',
-                  content: '确定删除' + row.name  + '？',
-                  positiveText: '确定',
-                  negativeText: '不确定',
-                  onPositiveClick: () => {
-                    deleteFile(String(row.id))
-                  }
-                })
-              break
-            default:
-              if(key.indexOf('user') !== -1) {
-                const userMenuKey = Number(key.replace('user-', ''))
-                const keyMenu = userMenu.value[userMenuKey]
-                if(keyMenu) {
+                title: '警告',
+                content: '确定删除' + row.name  + '？',
+                positiveText: '确定',
+                negativeText: '不确定',
+                onPositiveClick: () => {
+                  deleteFile(String(row.id))
+                }
+              })
+            }
+          }, {
+            default: () => '删除'
+          }),
+          h(NDropdown, {
+            trigger: 'click',
+            placement: 'bottom-end',
+            options: getFileActions(row),
+            onSelect: (key:string) => {
+              switch (key) {
+                case 'name':
+                  nameModelSHow(row)
+                    break
+                case 'batchCopy':
+                  batchCopy([row.id])
+                  break
+                case 'batchMove':
+                  batchMove([row.id])
+                  break
+                case 'down':
+                  downFile(row.id)
+                  break
+                case 'copyDown':
                   getFile(row.id)
                     .then((res:any) => {
-                      const render =  (template:string) => {
-                        return template.replace(/\{\{(.*?)\}\}/g, (match, key) => res.data[key.trim()]);
-                      }
-                      if(keyMenu.type === 'a') {
-                        window.open(render(keyMenu.content), '_target')
-                      } else if(keyMenu.type === 'copy') {
-                        copy(render(keyMenu.content))
+                      copy(res.data.web_content_link)
+                    })
+                  break
+                case 'aria2Post':
+                  getFile(row.id)
+                    .then((res:any) => {
+                      aria2Post(res)
+                    })
+                  break
+                case 'code':
+                  copy(`PikPak://${row.name}|${row.size}|${row.hash}`)
+                  break
+                case 'base':
+                  window.localStorage.setItem('pikpakUploadFolder', JSON.stringify(row))
+                  break
+                case 'share':
+                  shareUrl(row)
+                  break
+                case 'delete': 
+                  dialog.warning({
+                      title: '警告',
+                      content: '确定删除' + row.name  + '？',
+                      positiveText: '确定',
+                      negativeText: '不确定',
+                      onPositiveClick: () => {
+                        deleteFile(String(row.id))
                       }
                     })
-                }
+                  break
+                case 'sharePikPak':
+                  sharePikPakPassword.value = ''
+                  sharePikpak.value = row
+                  sharePikPakUrl.value = ''
+                  showSharePikPak.value = true
+                  break
+                default:
+                  if(key.indexOf('user') !== -1) {
+                    const userMenuKey = Number(key.replace('user-', ''))
+                    const keyMenu = userMenu.value[userMenuKey]
+                    if(keyMenu) {
+                      getFile(row.id)
+                        .then((res:any) => {
+                          const render =  (template:string) => {
+                            return template.replace(/\{\{(.*?)\}\}/g, (match, key) => res.data[key.trim()]);
+                          }
+                          if(keyMenu.type === 'a') {
+                            window.open(render(keyMenu.content), '_target')
+                          } else if(keyMenu.type === 'copy') {
+                            copy(render(keyMenu.content))
+                          }
+                        })
+                    }
+                  }
+                  break
               }
-              break
-          }
-        }
-      }, {
-        default: () => h(NIcon, {
-          color: '#306eff'
-        }, {
-          default: () => h(Dots)
-        })
+            }
+          }, {
+            default: () => h(NIcon, {
+              color: '#306eff'
+            }, {
+              default: () => h(Dots)
+            })
+          })
+        ]
       })
     }
   ])
@@ -426,10 +511,13 @@ import { DropdownMixedOption } from 'naive-ui/lib/dropdown/src/interface'
   })
   const aria2Data = ref()
   const parentInfo = ref()
+  const samllPage = ref(true)
   onMounted(() => {
     const width = document.body.clientWidth
     if(width > 968) {
+      samllPage.value = false
       columns.value.splice(2, 0, ...smallColums.value)
+      columns.value[columns.value.length - 1].width = 300
     }
     let aria2 = JSON.parse(window.localStorage.getItem('pikpakAria2') || '{}')
     if(aria2.dir === undefined) {
@@ -942,17 +1030,6 @@ import { DropdownMixedOption } from 'naive-ui/lib/dropdown/src/interface'
     }
     return 1
   }
-  const getTest = (id:string) => {
-    downFileList.value = []
-     getFloderFile()
-      .then(res => {
-        console.log(res, 11)
-        console.log(downFileList.value.length)
-        downFileList.value.forEach((item) => {
-          console.log(item.name, item.parent)
-      })
-    })
-  }
   const menuTypeList = ref([
     {
       label: "链接",
@@ -1040,7 +1117,12 @@ import { DropdownMixedOption } from 'naive-ui/lib/dropdown/src/interface'
       {
         label: '删除',
         key: 'delete'
-      }
+      },
+      {
+        label: '直接分享',
+        key: 'sharePikPak',
+        disabled: row.kind === 'drive#folder'
+      },
     ]
     if(row.kind !== 'drive#folder') {
       if(userMenu.value.length) {
@@ -1057,6 +1139,55 @@ import { DropdownMixedOption } from 'naive-ui/lib/dropdown/src/interface'
       }
     }
     return options
+  }
+  const showSharePikPak = ref(false)
+  const sharePikpak = ref()
+  const sharePikPakPassword = ref()
+  const sharePikPakUrl = ref()
+  const sharePikPakPostLoading = ref()
+  const sharePikPakPost = () => {
+    sharePikPakPostLoading.value = true
+    getFile(sharePikpak.value.id)
+      .then((res:any) => {
+        axios.post('https://pikpak-depot.z10.workers.dev', {
+          password: sharePikPakPassword.value || '',
+          uid: res.data.user_id,
+          Name: res.data.hash,
+          delete_time: String(new Date().getTime() + (24 * 60 * 60 * 1000)),
+          info: {
+            name: res.data.name,
+            file_extension: res.data.file_extension,
+            hash: res.data.hash,
+            id: res.data.id,
+            md5_checksum: res.data.md5_checksum,
+            mime_type: res.data.mime_type,
+            size: res.data.size,
+            thumbnail_link: res.data.thumbnail_link,
+            web_content_link:  res.data.web_content_link
+          },
+          info2: {
+            medias: res.data.medias,
+          },
+          info3: {
+            links: res.data.links,
+          }
+        })
+        .then((res:any) => {
+          sharePikPakUrl.value =  window.location.origin + window.location.pathname + router.resolve({
+            name: 'shareInfo',
+            params: {
+              id: res.data.id
+            }
+          }).href
+          copy(sharePikPakUrl.value + (sharePikPakPassword.value ? (' 提取密码  ' + sharePikPakPassword.value) : ''))
+        }).catch(res => {
+          window.$message.error(res.response.error || '出错了')
+        })
+        .finally(() => {
+          sharePikPakPostLoading.value = false
+          showSharePikPak.value = false
+        })
+      })
   }
 </script>
 
@@ -1128,6 +1259,9 @@ import { DropdownMixedOption } from 'naive-ui/lib/dropdown/src/interface'
 }
 .list-page-files {
   padding-bottom: 80px;
+}
+.list-page-files .n-data-table-td .n-space .n-text{
+  font-size: 12px;
 }
 .outer-wrapper {
   opacity: 0;
