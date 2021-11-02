@@ -853,7 +853,7 @@ import axios from 'axios';
   const shareUrl = (row: any) => {
     let pikpakUrl = `PikPak://${row.name}|${row.size}|${row.hash}`
     const user = JSON.parse(window.localStorage.getItem('pikpakUser') || '{}')
-    notionHttp.post('https://cors.z7.workers.dev/https://api.notion.com/v1/pages', {
+    notionHttp.post('https://api.notion.com/v1/pages', {
       parent: {
         database_id: 'f90e8e28b55e423185f44c89c53c573c',
       },
