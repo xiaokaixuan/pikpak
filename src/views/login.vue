@@ -18,11 +18,20 @@
           </n-form-item>
           <n-form-item label="">
             <n-checkbox v-model:checked="remember" @update:checked="showMessage">记住登陆</n-checkbox>
+            <a target="_blank" href="https://i.mypikpak.com/v1/file/center/account/v1/password/?type=forget_password&locale=zh-cn" class="forget-password">忘记密码</a>
           </n-form-item>
           <n-form-item>
             <n-button type="primary" :loading="loading" @click="loginPost">登陆</n-button>
           </n-form-item>
         </n-form>
+        <n-tooltip >
+          <template #trigger>
+            <n-icon color="#306eff" :size="32" class="google-tips">
+              <brand-google></brand-google>
+            </n-icon>
+          </template>
+          APP内谷歌登录的账号请先通过忘记密码设置密码后登录
+        </n-tooltip>
       </div>
     </div>
   </div>
@@ -30,9 +39,10 @@
 
 <script setup lang='ts'>
 import { ref } from '@vue/reactivity';
-import { NForm, NFormItem, NInput, NButton, useMessage, NCheckbox, useDialog } from 'naive-ui'
+import { NForm, NFormItem, NInput, NButton, useMessage, NCheckbox, useDialog, NTooltip, NIcon } from 'naive-ui'
 import http from '../utils/axios'
 import { useRouter } from 'vue-router'
+import { BrandGoogle } from '@vicons/tabler'
 const loginData = ref({
   username: '',
   password: ''
@@ -134,6 +144,7 @@ const showMessage = () => {
     background: #fff;
     border-radius: 20px;
     width: 348px;
+    position: relative;
   }
   .login-page .login-form {
     position: relative;
@@ -145,6 +156,18 @@ const showMessage = () => {
   }
   .login-page .login-form  button {
     width: 100%;
+  }
+  .login-page .n-form-item:nth-last-child(2) .n-form-item-blank {
+    justify-content: space-between;
+  }
+  .login-page .n-form-item a {
+    color: #306eff;
+  }
+  .login-page .google-tips {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    margin-left: -16px;
   }
   @media(max-width: 968px) {
     .login-page {
