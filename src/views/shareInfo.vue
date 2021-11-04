@@ -41,7 +41,7 @@
               <n-button  @click="downFile">下载</n-button>
             </n-space>
           </template>
-          <div style="width: 100%; height: 100%" v-if="shareInfo.info.mime_type.indexOf('video') !== -1">
+          <div style="width: 100%; height: 100%" v-if="shareInfo.info.mime_type.indexOf('video') !== -1 || shareInfo.info.mime_type.indexOf('audio') !== -1">
             <plyr-vue :video="shareInfo.info"></plyr-vue>
           </div>
           <template v-else>

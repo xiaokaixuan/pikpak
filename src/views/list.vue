@@ -272,12 +272,12 @@ import axios from 'axios';
           onClick: () => {
             if(row.kind === 'drive#folder') {
               router.push('/list/' + row.id)
-            } else if(row.mime_type.indexOf('video') != -1 || row.mime_type.indexOf('image') != -1) {
+            } else if(row.mime_type.indexOf('video') != -1 || row.mime_type.indexOf('image') != -1  || row.mime_type.indexOf('audio') != -1) {
               getFile(row.id)
                 .then(res => {
                   fileInfo.value = res.data
                   if(fileInfo.value.web_content_link) {
-                    if(row.mime_type.indexOf('video') != -1) {
+                    if(row.mime_type.indexOf('video') != -1 || row.mime_type.indexOf('audio') != -1) {
                       showVideo.value = true
                     } else {
                       showImage.value = true
