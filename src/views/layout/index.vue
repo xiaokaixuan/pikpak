@@ -82,7 +82,7 @@ import { NLayout, NLayoutSider, NLayoutContent, NMenu, MenuOption, NIcon, NProgr
 import { File, Trash, CircleX, Logout, Settings, Share } from '@vicons/tabler'
 import http from '../../utils/axios'
 import { byteConvert } from '../../utils'
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router'
   const collapsed = ref(false)
   const  renderIcon = (icon:any) => {
     return () => h(NIcon, null, { default: () => h(icon) })

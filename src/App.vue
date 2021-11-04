@@ -20,6 +20,10 @@ import MessageContent from './components/MessageContent.vue';
     },
     InternalSelectMenu: {
       optionTextColorActive: '#fff',
+    },
+    Upload: {
+      itemColorHover: '#F3F3F5FF',
+      itemTextColorSuccess: '#18A058FF',
     }
   })
 </script>
