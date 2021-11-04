@@ -92,7 +92,7 @@ import { CloudUpload } from '@vicons/tabler'
         }
       }))
     }
-    fileInfo.name = fileInfo.name.replace('-正在效验文件', '').replace('-正在上传', '')
+    fileInfo.name = fileInfo.name.replace('-正在效验文件', '').replace('-正在上传文件', '')
     fileUpload.value[fileInfo.id].gcid = 100
     console.log(fileInfo)
     if(fileInfo.status !== 'uploading') {
@@ -155,20 +155,20 @@ import { CloudUpload } from '@vicons/tabler'
             fileInfo.status = 'finished'
             fileInfo.percentage = 100
             uploadig.value--
-            fileInfo.name = fileInfo.name.replace('-正在效验文件', '').replace('-正在上传', '')
+            fileInfo.name = fileInfo.name.replace('-正在效验文件', '').replace('-正在上传文件', '')
             window.localStorage.removeItem(localStorageKey)
             postFile()
             console.log(result)
           } catch (error) {
             window.$message.error('看来你没解决了跨域问题~~~~')
-            fileInfo.name = fileInfo.name.replace('-正在效验文件', '').replace('-正在上传', '')
+            fileInfo.name = fileInfo.name.replace('-正在效验文件', '').replace('-正在上传文件', '')
             fileInfo.status = 'error'
             console.log(error)
             uploadig.value--
             postFile()
           }
       } else {
-        fileInfo.name = fileInfo.name.replace('-正在效验文件', '').replace('-正在上传', '')
+        fileInfo.name = fileInfo.name.replace('-正在效验文件', '').replace('-正在上传文件', '')
         fileInfo.status = 'finished'
         fileInfo.percentage = 100
         uploadig.value--
