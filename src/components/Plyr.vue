@@ -5,7 +5,7 @@
     </template>
   </video>
   <audio ref="playerRef" v-else-if="videoInfo.mime_type.indexOf('audio') !== -1">
-      <source :src="videoInfo.web_content_link" :type="videoInfo.mime_type" />
+      <source :src="videoInfo.web_content_link"  />
   </audio>
 </template>
 <script setup lang="ts">
