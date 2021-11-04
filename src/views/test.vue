@@ -33,7 +33,6 @@
   import http from '../utils/axios'
   import OSS from 'ali-oss'
   import { useRoute } from 'vue-router'
-import { nextTick, onMounted } from '@vue/runtime-core'
 import { CloudUpload } from '@vicons/tabler'
 
   const uploadRef = ref()
@@ -45,7 +44,8 @@ import { CloudUpload } from '@vicons/tabler'
     [key:string]: {
       oss?: any,
       gcid?: number,
-      hash?: string
+      hash?: string,
+      retry?: number
     }
   }>({})
   const changeFile = async ({fileList}:{fileList:UploadFileInfo[]}) => {
@@ -56,7 +56,7 @@ import { CloudUpload } from '@vicons/tabler'
     }
   }
   const postFile = async () => {
-    if(uploadig.value > max.value){
+    if(uploadig.value >= max.value){
       return false
     }
     let fileInfo:UploadFileInfo | undefined = undefined
@@ -68,6 +68,25 @@ import { CloudUpload } from '@vicons/tabler'
         }
       }
     }
+    if(!fileInfo) {
+      max.value = 1
+      console.log(max.value, uploadig.value)
+      if(uploadig.value >= max.value) {
+        return false
+      }
+      if(fileListRef.value) {
+        for(let i in fileListRef.value) {
+          if(fileListRef.value[i].status === 'error' && (fileUpload.value[fileListRef.value[i].id].retry || 0) < 3) {
+            fileUpload.value[fileListRef.value[i].id].retry  = (fileUpload.value[fileListRef.value[i].id].retry || 0) + 1
+            console.log(fileUpload.value[fileListRef.value[i].id])
+            fileInfo = fileListRef.value[i]
+            console.log(fileInfo.status)
+            break
+          }
+        }
+      }
+    }
+    
     if(!fileInfo) {
       return false
     }
@@ -134,6 +153,9 @@ import { CloudUpload } from '@vicons/tabler'
           fileUpload.value[fileInfo.id].oss = oss
           try {
             const ossPrarams:any = {
+              partSize: 1024 * 1024 * 0.1,
+              parallel: 3,
+              timeout:  60000,
               progress: (p:number, checkpoint:object) => {
                 if(fileInfo) {
                   if(fileInfo.name.indexOf('-正在上传文件') === -1) {
@@ -160,11 +182,13 @@ import { CloudUpload } from '@vicons/tabler'
             postFile()
             console.log(result)
           } catch (error) {
-            window.$message.error('看来你没解决了跨域问题~~~~')
-            fileInfo.name = fileInfo.name.replace('-正在效验文件', '').replace('-正在上传文件', '')
-            fileInfo.status = 'error'
             console.log(error)
             uploadig.value--
+            fileInfo.name = fileInfo.name.replace('-正在效验文件', '').replace('-正在上传文件', '')
+            fileInfo.status = 'error'
+            if((fileUpload.value[fileInfo.id].retry || 0) < 3) {
+              window.$message.error('稍后会重试' + fileInfo.name)
+            }
             postFile()
           }
       } else {
@@ -193,25 +217,4 @@ import { CloudUpload } from '@vicons/tabler'
     }
     
   }
-  onMounted(() => {
-    nextTick(() => {
-      console.log(uploadRef.value.submit)
-      setTimeout(() => {
-        uploadRef.value.submit = (id:string) => {
-          console.log(id)
-          if(fileListRef.value) {
-            for(let i in fileListRef.value) {
-              if(fileListRef.value[i].id === id) {
-                fileListRef.value[i].status = 'pending'
-                fileListRef.value[i].percentage = 100 
-                break
-              }
-            }
-          }
-        }
-      }, 0);
-
-      console.log(uploadRef.value.submit)
-    })
-  })
 </script>
