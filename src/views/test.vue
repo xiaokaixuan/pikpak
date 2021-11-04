@@ -43,7 +43,7 @@ import { CloudUpload } from '@vicons/tabler'
   const uploadig = ref(0)
   const fileUpload = ref<{
     [key:string]: {
-      oss?: OSS,
+      oss?: any,
       gcid?: number,
       hash?: string
     }
@@ -180,7 +180,7 @@ import { CloudUpload } from '@vicons/tabler'
   }
   const moveFile = ({file}:{file:UploadFileInfo}) => {
     if(file.status === 'uploading' && file.id && uploadig.value && fileUpload.value[file.id]) {
-      fileUpload.value[file.id].oss?.cancel()
+      fileUpload.value[file.id].oss.cancel()
     }
     if(fileListRef.value) {
       for(let i in fileListRef.value) {
