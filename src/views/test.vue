@@ -92,6 +92,7 @@ import { CloudUpload } from '@vicons/tabler'
         }
       }))
     }
+    fileInfo.name = fileInfo.name.replace('-正在效验文件', '').replace('-正在上传', '')
     fileUpload.value[fileInfo.id].gcid = 100
     console.log(fileInfo)
     if(fileInfo.status !== 'uploading') {
