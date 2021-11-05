@@ -153,7 +153,7 @@ import { CloudUpload } from '@vicons/tabler'
           fileUpload.value[fileInfo.id].oss = oss
           try {
             const ossPrarams:any = {
-              partSize: 1024 * 1024 * 0.1,
+              partSize: 1000 * 1000 * 0.1,
               parallel: 3,
               timeout:  60000,
               progress: (p:number, checkpoint:object) => {
