@@ -11,8 +11,8 @@ instance.interceptors.request.use(request => {
   request.headers = {
     'Authorization': pikpakLogin.token_type + ' ' + pikpakLogin.access_token
   }
-  if(request.url?.indexOf('https://pikpak-api.herokuapp.com') === -1) {
-    request.url = 'https://pikpak-api.herokuapp.com/' + request.url
+  if(request.url?.indexOf('https://cors.z7.workers.dev') === -1) {
+    request.url = 'https://cors.z7.workers.dev/' + request.url
   }
   return request
 })
@@ -79,8 +79,8 @@ instance2.interceptors.request.use(request => {
     'Notion-Version': '2021-08-16',
     'Content-Type': 'application/json'
   }
-  if(request.url?.indexOf('https://pikpak-api.herokuapp.com') === -1) {
-    request.url = 'https://pikpak-api.herokuapp.com/' + request.url
+  if(request.url?.indexOf('https://cors.z7.workers.dev') === -1) {
+    request.url = 'https://cors.z7.workers.dev/' + request.url
   }
   return request
 })

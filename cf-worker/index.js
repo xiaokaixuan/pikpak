@@ -38,10 +38,10 @@ async function handleRequest(event) {
       }
       else {
           //补上前缀 http://
+          url = url.replace(/https:(\/)*/,'https://').replace(/http:(\/)*/, 'http://')
           if (url.indexOf("://") == -1) {
               url = "http://" + url;
           }
-
           //构建 fetch 参数
           let fp = {
               method: request.method,
@@ -70,7 +70,6 @@ async function handleRequest(event) {
                   fp.body = await request.blob();
               }
           }
-
           // 发起 fetch
           let fr = (await fetch(url, fp));
           outCt = fr.headers.get('content-type');
