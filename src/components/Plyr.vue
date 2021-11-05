@@ -43,6 +43,9 @@ import 'plyr/dist/plyr.css'
 .plyr--video {
   height: 100%;
 }
+.plyr--audio {
+  margin-top: 320px;
+}
 .plyr video {
   object-fit: contain;
   position: absolute;
@@ -53,4 +56,5 @@ import 'plyr/dist/plyr.css'
   width: 100%;
   height: 100%;
 }
+
 </style>
