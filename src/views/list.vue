@@ -648,6 +648,9 @@ import axios from 'axios';
       .then(() => {
         window.$message.success('删除成功')
         pageToken.value = ''
+        if(typeof id === 'object') {
+          checkedRowKeys.value = []
+        }
         getFileList()
       })
   }
@@ -921,6 +924,7 @@ import axios from 'axios';
       }
     })
     batchMove(text)
+    checkedRowKeys.value = []
   }
   const batchCopyAll = (items:object) => {
     let text:string[] = []
@@ -930,6 +934,7 @@ import axios from 'axios';
       }
     })
     batchCopy(text)
+    checkedRowKeys.value = []
   }
   const moveFiles = ref()
   const batchMove = (items:object) => {
