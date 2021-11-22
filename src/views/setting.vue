@@ -1,6 +1,12 @@
 <template>
   <div class="list-page">
-    <n-collapse :default-expanded-names="['0', '2']">
+    <n-collapse :default-expanded-names="['-1', '0', '2']">
+      <n-collapse-item name="-1" title="绑定telegram">
+        <n-input v-model:value="telegramUrl" placeholder="复制telegram绑定链接到这"></n-input>
+        <p></p>
+        <n-button :disabled="!telegramUrl" type="primary" @click="goTelegram">Telegram绑定</n-button>
+        <a href="https://t.me/PikPak_Bot" target="_blank">Telegram机器人地址</a>
+      </n-collapse-item>
       <n-collapse-item name="0" title="aria2设置">
         <n-form label-width="100px" label-align="left" label-placement="left">
           <n-form-item label="aria2链接：">
@@ -64,8 +70,10 @@
 <script setup lang="ts">
 import { ref } from '@vue/reactivity';
 import { onMounted } from '@vue/runtime-core';
+import http from '../utils/axios'
 import { NForm, NFormItem, NButton, NInput, NCollapse, NCollapseItem, NSpace, NSwitch, useDialog, NAlert, NLog } from 'naive-ui'
 const logs = ref([
+  '绑定Telegram',
   '直接分享功能',
   '修改传输自动请求方式',
   '传输只显示保存中',
@@ -143,6 +151,34 @@ onMounted(() => {
     loginSwitch.value = true 
   }
 })
+const telegramUrl = ref()
+const goTelegram = () => {
+  let login = JSON.parse(window.localStorage.getItem('pikpakLogin') || '{}')
+  if(!login && !login.access_token) {
+    window.$message.error('请先登陆')
+    return false
+  }
+  
+  let matchArray = telegramUrl.value &&  decodeURIComponent(telegramUrl.value).match(/(^|&)token=([^&]*)(&|$)/)
+  console.log(matchArray)
+  if(!matchArray || !matchArray.length || matchArray.length != 4) {
+    window.$message.error('请输入正确链接')
+    return false
+  }
+  http.post('https://api-drive.mypikpak.com/user/v1/bind', {
+      accessToken: login.access_token,
+      thirdType: "TG",
+      thirdToken: matchArray[2]
+    })
+    .then((res:any) => {
+      telegramUrl.value = ''
+      if(res.data.bound) {
+        window.$message.success('绑定成功')
+      } else {
+        window.$message.error('绑定失败')
+      }
+    })
+}
 </script>
 
 <style>
