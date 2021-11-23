@@ -18,10 +18,14 @@
           </n-form-item>
           <n-form-item label="">
             <n-checkbox v-model:checked="remember" @update:checked="showMessage">记住登陆</n-checkbox>
-            <a target="_blank" href="https://i.mypikpak.com/v1/file/center/account/v1/password/?type=forget_password&locale=zh-cn" class="forget-password">忘记密码</a>
           </n-form-item>
           <n-form-item>
-            <n-button type="primary" :loading="loading" @click="loginPost">登陆</n-button>
+            <n-button type="primary" class="block" :loading="loading" @click="loginPost">登陆</n-button>
+          </n-form-item>
+          <n-form-item label="">
+            <a target="_blank" href="https://i.mypikpak.com/v1/file/center/account/v1/password/?type=forget_password&locale=zh-cn" class="forget-password">忘记密码</a>
+            <!-- <router-link to="/register" class="register">注册</router-link> -->
+            <a href="javascript:;" @click="getApk">去下载注册</a>
           </n-form-item>
         </n-form>
         <n-tooltip >
@@ -94,6 +98,12 @@ const showMessage = () => {
       })
   }
 }
+const getApk = () => {
+  http.get('https://api-drive.mypikpak.com/package/v1/apk/url/225815')
+    .then((res:any) => {
+      window.open(res.data.apk_url)
+    })
+}
 </script>
 
 <style >
@@ -154,10 +164,11 @@ const showMessage = () => {
     padding-right: 22px;
     padding-bottom: 40px;
   }
-  .login-page .login-form  button {
+  .login-page .login-form  button.block {
     width: 100%;
   }
-  .login-page .n-form-item:nth-last-child(2) .n-form-item-blank {
+  .login-page .n-form-item:nth-last-child(1) .n-form-item-blank {
+    margin-top: -10px;
     justify-content: space-between;
   }
   .login-page .n-form-item a {

@@ -73,6 +73,7 @@ import { onMounted } from '@vue/runtime-core';
 import http from '../utils/axios'
 import { NForm, NFormItem, NButton, NInput, NCollapse, NCollapseItem, NSpace, NSwitch, useDialog, NAlert, NLog } from 'naive-ui'
 const logs = ref([
+  '添加推广下载',
   '绑定Telegram',
   '直接分享功能',
   '修改传输自动请求方式',
