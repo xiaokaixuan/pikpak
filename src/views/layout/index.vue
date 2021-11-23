@@ -36,7 +36,7 @@
           <div class="user-info-name">
             {{userInfo?.name}}
             <div v-if="vipInfo?.status === 'ok' && vipInfo?.expire">
-              会员时间 <n-time :to="new Date().getTime()" :time="new Date(vipInfo.expire).getTime()" type="relative"></n-time>
+               <n-time :time="new Date(vipInfo.expire)" type="datetime"></n-time>
             </div>
           </div>
           <div class="action">
@@ -278,7 +278,7 @@ import { useRoute, useRouter } from 'vue-router'
   .user-info-name {
     font-size: 14px;
     line-height: 1.5;
-    margin-left: 16px;
+    margin-left: 4px;
     max-width: 100%;
     overflow: hidden;
     white-space: nowrap;
