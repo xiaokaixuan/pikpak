@@ -10,11 +10,6 @@
       </div>
       <div class="login-box">
         <n-form label-align="left" style="padding-top: 30px;" :model="loginData" :rules="rules" ref="formRef" label-placement="left" label-width="0" class="login-form">
-          <n-form-item>
-            <n-alert type="error" :show-icon="false">
-              注册成功没有3天免费会员，请确定注册!!!!
-            </n-alert>
-          </n-form-item>
           <n-form-item path="email">
             <n-input v-model:value="loginData.email" placeholder="请输入邮箱"></n-input>
           </n-form-item>
@@ -55,11 +50,12 @@
 
 <script setup lang='ts'>
 import { ref } from '@vue/reactivity';
-import { NForm, NFormItem, NInput, NButton, useMessage, NAlert, useDialog, NTooltip, NIcon, NInputGroup, FormRules, FormValidationError } from 'naive-ui'
+import { NForm, NFormItem, NInput, NButton, useMessage, NAlert, useDialog, NTooltip, NIcon, NInputGroup, FormRules } from 'naive-ui'
 import http from '../utils/axios'
 import { useRouter } from 'vue-router'
 import { BrandGoogle } from '@vicons/tabler'
-import { onUnmounted } from '@vue/runtime-core';
+import {  onUnmounted } from '@vue/runtime-core'
+import axios from 'axios';
 const loginData = ref({
   email: '',
   password: '',
@@ -112,19 +108,26 @@ const codeLoading  = ref(false)
 const loading = ref(false)
 const router = useRouter()
 const message = useMessage()
-const initCaptcha = () => {
+// 32随机数
+const randomString = () =>  {
+    let len = 32;
+    let chars ='abcdefhijkmnprstwxyz2345678';
+    let maxPos = chars.length;
+    let character = '';
+    for (let i = 0; i < len; i++) {
+        character += chars.charAt(Math.floor(Math.random() * maxPos))
+    }
+    return character;
+}
+const deviceId = randomString()
+const initCaptcha = (uid?:string) => {
   return http.post('https://user.mypikpak.com/v1/shield/captcha/init?client_id=YNxT9w7GMdWvEOKa', {
     action: loginData.value.captcha_token ? 'POST:/v1/auth/signup': "POST:/v1/auth/verification",
     captcha_token: loginData.value.captcha_token || '',
     client_id: "YNxT9w7GMdWvEOKa",
-    device_id: "49713471949bc51442ba9e39296d6872",
+    device_id: deviceId,
     meta: {
       "email": loginData.value.email,
-      // "timestamp": '' + new Date().getTime(),
-      // "captcha_sign": "1.b27c5a1ec2aad71bdae1bdcc1f73aaad",
-      // "client_version": "1.7.0",
-      // "user_id": "",
-      // "package_name": "com.pikcloud.pikpak"
     },
     redirect_uri: "xlaccsdk01://xunlei.com/callback?state\u003dharbor"
   })
@@ -190,7 +193,7 @@ const register = (e:Event) => {
             .then(() => {
               http.post('https://user.mypikpak.com/v1/auth/signup?client_id=YNxT9w7GMdWvEOKa', {
                 captcha_token: loginData.value.captcha_token,
-                client_id: "YNxT9w7GMdWvEOKa",
+                client_id: 'YNxT9w7GMdWvEOKa',
                 client_secret: "dbw2OtmVEeuUvIptb1Coyg",
                 email: loginData.value.email,
                 name: loginData.value.name,
@@ -198,7 +201,7 @@ const register = (e:Event) => {
                 verification_token: res.data.verification_token
               })
                 .then((res:any) => {
-                  // vipInvite(res.data.sub)
+                  vipInvite(res.data)
                   window.localStorage.setItem('pikpakLogin', JSON.stringify(res.data))
                   window.localStorage.removeItem('pikpakLoginData')
                   message.success('注册成功')
@@ -216,30 +219,19 @@ const register = (e:Event) => {
     
   })
 }
-const vipInvite = (uid:string) => {
-  http.post('https://api-drive.mypikpak.com/vip/v1/activity/invite',  {
-    "data": {
-      "sdk_int":"23",
-      "uuid":"669e9221e06956dbf43c395a24dbc0a2",
-      "userType":"1",
-      "userid": uid,
-      "product_flavor_name":"cha",
-      "language_system":"zh-CN",
-      "language_app":"zh-CN",
-      "build_version_release":"6.0.1",
-      "phoneModel":"MUMU",
-      "build_manufacturer":"NETEASE",
-      "build_sdk_int":"23",
-      "channel":"spread",
-      "versionCode":"10043",
-      "versionName":"1.7.0",
-      "country":"CN"
-    },
-    "apk_extra": {
-      "invite_code":"225815",
-      "channel":"spread"
-    }
-  })
+const vipInvite = (loginData:any) => {
+  axios.get('https://invite.z7.workers.dev/' + loginData.sub, {
+      headers: {
+        'authorization': loginData.token_type + ' ' + loginData.access_token
+      }
+    })
+      .then((res:any) => {
+        // if(res.data.invited_days) {
+        //   window.$message.success('恭喜您，您已成功增加' + res.data.invited_days + '天')
+        // } else {
+        //   window.$message.error('您已经邀请过了')
+        // }
+      })
 }
 onUnmounted(() => {
   timer.value && clearInterval(timer.value)
