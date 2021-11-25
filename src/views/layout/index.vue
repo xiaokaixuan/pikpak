@@ -11,7 +11,6 @@
       @expand="collapsed = false"
       bordered
     >
-    
       <a href="https://mypikpak.com/" target="_blank" class="logo-box">
         <img src="https://www.mypikpak.com/logo.png" class="logo-box__icon" alt="">
         <div class="logo-box__text">PikPak</div>
@@ -28,6 +27,14 @@
           :color="vipInfo?.status === 'ok' ? '#d1ae6a' : undefined"
           processing>
         </n-progress>
+        <p style="margin-bottom: 0;">
+          <n-tooltip placement="right">
+              <template #trigger>
+                <a style="color: #306eff;" target="_blank" href="https://k.youshop10.com/JGDtoxg6">￥119购买体验会员VIP年卡</a>
+              </template>
+              【0.33元/天】PikPak体验会员VIP年卡-可与7天免费会员码叠加，官方代理商分销，感谢支持
+          </n-tooltip>
+        </p>
       </div>
       <div class="sider-bottom" v-if="!collapsed" :class="{vip: vipInfo?.status === 'ok'}">
         <div class="bottom-user-info">
@@ -68,6 +75,10 @@
         </n-icon>
       </template>
       <n-input placeholder="会员码" v-model:value="code"></n-input>
+      <p>
+        <a style="color: #306eff;" target="_blank" href="https://k.youshop10.com/JGDtoxg6">【0.33元/天】PikPak体验会员VIP年卡-可与7天免费会员码叠加，感谢支持</a>
+      </p>
+
       <template #action>
         <n-button :block="true" type="primary" :disabled="!code" @click="postCode">添加</n-button>
       </template>
