@@ -59,7 +59,7 @@ import { CircleX, CornerUpLeftDouble } from '@vicons/tabler'
       sorter: 'default',
       render: (row) => {
         return h(NTime, {
-          time: new Date(String(row.delete_time) || ''),
+          time: new Date(String(row.created_time) || ''),
           format: 'MM-dd HH:MM'
         })
       },
