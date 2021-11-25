@@ -32,7 +32,7 @@
               <template #trigger>
                 <a style="color: #306eff;" target="_blank" href="https://k.youshop10.com/JGDtoxg6">￥119购买体验会员VIP年卡</a>
               </template>
-              【0.33元/天】PikPak体验会员VIP年卡-可与7天免费会员码叠加，官方代理商分销，感谢支持
+              【0.33元/天】PikPak体验会员VIP年卡-可与7天免费会员码叠加-每人只能购买使用一次，官方代理商分销，感谢支持
           </n-tooltip>
         </p>
       </div>
@@ -76,7 +76,7 @@
       </template>
       <n-input placeholder="会员码" v-model:value="code"></n-input>
       <p>
-        <a style="color: #306eff;" target="_blank" href="https://k.youshop10.com/JGDtoxg6">【0.33元/天】PikPak体验会员VIP年卡-可与7天免费会员码叠加，感谢支持</a>
+        <a style="color: #306eff;" target="_blank" href="https://k.youshop10.com/JGDtoxg6">【0.33元/天】PikPak体验会员VIP年卡-可与7天免费会员码叠加-每人只能购买使用一次，感谢支持</a>
       </p>
 
       <template #action>

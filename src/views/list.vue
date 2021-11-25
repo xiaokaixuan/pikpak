@@ -99,7 +99,7 @@
         <n-alert :show-icon="false" closable title="添加说明">
           <div>1.支持Magnet链接(magnet:?xt=urn)，Magent链接只能默认保存到My Pack</div>
           <div>2.支持秒传链接(PikPak://PikPak Tutorial.mp4|19682618|123)秒传链接默认保存到当前文件夹或第一个文件夹不能保存到根目录</div>
-          <div>3.支持新建文件夹（普通格式）</div>
+          <div>3.支持新建文件夹（普通格式，不带:）</div>
           <div>4.换行添加多个</div>
         </n-alert>
         <br />
@@ -153,6 +153,9 @@
     </n-modal>
     <n-modal v-model:show="showUserMenu">
       <n-card style="width: 600px;" title="自定义菜单">
+        <template #header>
+          自定义菜单 <a href="https://www.tjsky.net/?p=220#i-8" target="_blank"> <n-icon style="vertical-align: middle;" size="20" color="#d03050"><zoom-question></zoom-question></n-icon> </a>
+        </template>
         <template #header-extra>
           <n-icon @click="showUserMenu = false">
             <circle-x></circle-x>
@@ -218,7 +221,7 @@ import { h, computed, onMounted, watch, nextTick } from '@vue/runtime-core'
 import http, { notionHttp } from '../utils/axios'
 import { useRoute, useRouter } from 'vue-router'
 import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NTooltip, NSpace, NScrollbar, NSpin, NDropdown, useDialog, NAlert, useNotification, NotificationReactive, NSelect, NForm, NFormItem, NTag, NText } from 'naive-ui'
-import { CirclePlus, CircleX, Dots, Share, Copy as IconCopy, SwitchHorizontal, LetterA } from '@vicons/tabler'
+import { CirclePlus, CircleX, Dots, Share, Copy as IconCopy, SwitchHorizontal, LetterA, ZoomQuestion } from '@vicons/tabler'
 import { byteConvert } from '../utils'
 import PlyrVue from '../components/Plyr.vue'
 import TaskVue from '../components/Task.vue'
@@ -595,7 +598,7 @@ import axios from 'axios';
                   provider: "UPLOAD_TYPE_UNKNOWN"
               }
           }
-        } else if(url.indexOf('magnet:?xt=urn') === 0) {
+        } else if(url.indexOf(':') !== -1) {
           hasTask = true
           postData = {
             kind: "drive#file",

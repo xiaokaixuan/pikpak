@@ -8,7 +8,7 @@
     </n-alert>
     <br />
     <n-alert title="请先设置默认上传目录" type="error" v-if="!uploadFolder || !uploadFolder.id">
-      请先在文件列表操作选择设置默认
+      请先在文件列表操作选择设置默认 <a href="https://www.tjsky.net/?p=220#i-4" target="_blank"> <n-icon style="vertical-align: middle;" size="20" color="#d03050"><zoom-question></zoom-question></n-icon> </a>
     </n-alert>
     
     <n-alert title="默认目录" type="success" v-else>
@@ -28,7 +28,8 @@
 <script setup lang="ts">
 import { ref } from '@vue/reactivity'
 import { h, onMounted } from '@vue/runtime-core'
-import { DataTableColumns, NDataTable, NText, NTime, NAlert, NSpace, NScrollbar, NSpin } from 'naive-ui'
+import { DataTableColumns, NDataTable, NText, NTime, NAlert, NSpace, NScrollbar, NSpin, NIcon } from 'naive-ui'
+import { ZoomQuestion } from '@vicons/tabler'
 import http, { notionHttp } from '../utils/axios'
 
 const columns = ref<DataTableColumns>([])

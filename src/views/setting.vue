@@ -1,13 +1,17 @@
 <template>
   <div class="list-page">
     <n-collapse :default-expanded-names="['-1', '0', '2']">
-      <n-collapse-item name="-1" title="绑定telegram">
+      <n-collapse-item name="-1" >
+        <template #header>
+          绑定telegram   <a @click.stop="" href="https://www.tjsky.net/?p=220#Telegram" target="_blank"> <n-icon style="vertical-align: middle;" size="20" color="#d03050"><zoom-question></zoom-question></n-icon> </a>
+        </template>
         <n-input v-model:value="telegramUrl" placeholder="复制telegram绑定链接到这"></n-input>
         <p></p>
         <n-button :disabled="!telegramUrl" type="primary" @click="goTelegram">Telegram绑定</n-button>
         <a href="https://t.me/PikPak_Bot" target="_blank">Telegram机器人地址</a>
       </n-collapse-item>
       <n-collapse-item name="0" title="aria2设置">
+        <template #header>aria2设置   <a @click.stop="" href="https://www.tjsky.net/?p=220#arai2" target="_blank"> <n-icon style="vertical-align: middle;" size="20" color="#d03050"><zoom-question></zoom-question></n-icon> </a></template>
         <n-form label-width="100px" label-align="left" label-placement="left">
           <n-form-item label="aria2链接：">
             <n-input v-model:value="aria2Data.host" placeholder="例如http://localhost:6800/jsonrpc"></n-input>
@@ -33,6 +37,7 @@
         </n-form>
       </n-collapse-item>
       <n-collapse-item name="1" title="自动登录设置">
+        <template #header>自动登录设置   <a @click.stop="" href="https://www.tjsky.net/?p=220#i-6" target="_blank"> <n-icon style="vertical-align: middle;" size="20" color="#d03050"><zoom-question></zoom-question></n-icon> </a></template>
         <n-form label-width="100px" label-align="left" label-placement="left">
           <n-form-item label="是否开启">
             <n-switch v-model:value="loginSwitch"></n-switch>
@@ -71,7 +76,8 @@
 import { ref } from '@vue/reactivity';
 import { onMounted } from '@vue/runtime-core';
 import http from '../utils/axios'
-import { NForm, NFormItem, NButton, NInput, NCollapse, NCollapseItem, NSpace, NSwitch, useDialog, NAlert, NLog } from 'naive-ui'
+import { NForm, NFormItem, NButton, NInput, NCollapse, NCollapseItem, NSpace, NSwitch, useDialog, NAlert, NLog, NIcon } from 'naive-ui'
+import { ZoomQuestion } from '@vicons/tabler'
 const logs = ref([
   '添加推广下载',
   '绑定Telegram',
