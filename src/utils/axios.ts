@@ -5,11 +5,9 @@ const instance = axios.create({})
 
 instance.interceptors.request.use(request => {
   const pikpakLogin = JSON.parse(window.localStorage.getItem('pikpakLogin') || '{}')
-  if(!pikpakLogin || !pikpakLogin.access_token) {
-    router.push('/login')
-  }
-  request.headers = {
-    'Authorization': pikpakLogin.token_type + ' ' + pikpakLogin.access_token
+  request.headers = request.headers || {}
+  if (pikpakLogin.access_token) {
+    request.headers['Authorization'] = `${pikpakLogin.token_type || 'Bearer'} ${pikpakLogin.access_token}`
   }
   if(request.url?.indexOf('https://cors.z7.workers.dev') === -1) {
     request.url = 'https://cors.z7.workers.dev/' + request.url
