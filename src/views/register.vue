@@ -29,10 +29,13 @@
             <n-input  :disabled="!loginData.password" v-model:value="loginData.password1" placeholder="请再次输入密码" @keyup.enter="register" type="password" show-password-on="mousedown"></n-input>
           </n-form-item>
           <n-form-item label="">
-            <router-link to="/login" class="forget-password">已有账号？点击登录</router-link>
+            <n-checkbox v-model:checked="invite">接受邀请获得10天vip</n-checkbox>
           </n-form-item>
           <n-form-item>
             <n-button type="primary" class="block" :loading="loading" @click="register">注册</n-button>
+          </n-form-item>
+          <n-form-item label="">
+            <router-link to="/login" class="forget-password">已有账号？点击登录</router-link>
           </n-form-item>
         </n-form>
         <n-tooltip >
@@ -50,7 +53,7 @@
 
 <script setup lang='ts'>
 import { ref } from '@vue/reactivity';
-import { NForm, NFormItem, NInput, NButton, useMessage, NAlert, useDialog, NTooltip, NIcon, NInputGroup, FormRules } from 'naive-ui'
+import { NForm, NFormItem, NInput, NButton, useMessage, NAlert, useDialog, NTooltip, NIcon, NInputGroup, FormRules, NCheckbox } from 'naive-ui'
 import http from '../utils/axios'
 import { useRouter } from 'vue-router'
 import { BrandGoogle } from '@vicons/tabler'
@@ -69,6 +72,7 @@ const formRef = ref()
 const validatePasswordSame = (rule:any, value:string) => {
   return !value || value === loginData.value.password
 }
+const invite = ref(false)
 const rules:FormRules = {
   email: [
     { required: true, message: '请输入邮箱', trigger: 'blur' },
@@ -103,6 +107,9 @@ const rules:FormRules = {
   verification_code: [
     { required: true, message: '请输入验证码', trigger: 'blur' },
   ],
+}
+const changeEmail = (value:string) => {
+  console.log(value)
 }
 const codeLoading  = ref(false)
 const loading = ref(false)
@@ -201,7 +208,9 @@ const register = (e:Event) => {
                 verification_token: res.data.verification_token
               })
                 .then((res:any) => {
-                  vipInvite(res.data)
+                  if(invite.value) {
+                    vipInvite(res.data)
+                  }
                   window.localStorage.setItem('pikpakLogin', JSON.stringify(res.data))
                   window.localStorage.removeItem('pikpakLoginData')
                   message.success('注册成功')
