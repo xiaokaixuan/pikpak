@@ -192,26 +192,6 @@
       </n-card>
     </n-modal>
 
-    <n-modal v-model:show="showSharePikPak">
-      <n-card style="width: 600px;" title="分享">
-        <template #header-extra>
-          <n-icon @click="showSharePikPak = false">
-            <circle-x></circle-x>
-          </n-icon>
-        </template>
-        <n-alert type="info" :title="'确定分享' + sharePikpak.name + '？'">
-          <n-text type="error">
-            分享链接有效期为24小时
-          </n-text>
-        </n-alert>
-        <br/>
-        <n-input placeholder="分享密码" type="password" show-password-on="mousedown" v-model:value="sharePikPakPassword"></n-input>
-
-        <template #action>
-          <n-button :block="true" type="primary" :loading="sharePikPakPostLoading" @click="sharePikPakPost">获取分享链接</n-button>
-        </template>
-      </n-card>
-    </n-modal>
   </div>
 </template>
 
@@ -350,17 +330,6 @@ import axios from 'axios';
           }, {
             default: () => '下载'
           }),
-          !samllPage.value && row.kind === 'drive#file' && h(NText, {
-            type: 'primary',
-            onClick: () => {
-              sharePikPakPassword.value = ''
-              sharePikpak.value = row
-              sharePikPakUrl.value = ''
-              showSharePikPak.value = true
-            }
-          }, {
-            default: () => '分享'
-          }),
           !samllPage.value && h(NText, {
             type: 'primary',
             onClick: () => {
@@ -412,9 +381,6 @@ import axios from 'axios';
                   break
                 case 'base':
                   window.localStorage.setItem('pikpakUploadFolder', JSON.stringify(row))
-                  break
-                case 'share':
-                  shareUrl(row)
                   break
                 case 'delete': 
                   dialog.warning({
@@ -855,68 +821,6 @@ import axios from 'axios';
         getFileList()
       }
     }
-  }
-  const shareUrl = (row: any) => {
-    let pikpakUrl = `PikPak://${row.name}|${row.size}|${row.hash}`
-    const user = JSON.parse(window.localStorage.getItem('pikpakUser') || '{}')
-    notionHttp.post('https://api.notion.com/v1/pages', {
-      parent: {
-        database_id: 'f90e8e28b55e423185f44c89c53c573c',
-      },
-      properties: {
-        '分类': {
-          select: {
-            name: '来自PikPak网页'
-          }
-        },
-        '标签': {
-          select: {
-            name: '其他'
-          }
-        },
-        '发布人': {
-          rich_text: [
-            {
-              text: {
-                content: user.name || ''
-              }
-            }
-          ]
-        },
-        '名称': {
-          title: [{
-            text: {
-              content: row.name
-            }
-          }]
-        },
-        '链接': {
-          rich_text: [
-            {
-              text: {
-                content: pikpakUrl
-              }
-            }
-          ]
-        },
-        '大小': {
-          rich_text: [
-            {
-              text: {
-                content: byteConvert(row.size)
-              }
-            }
-          ]
-        }
-      }
-    })
-      .then(res => {
-        console.log(res)
-        window.$message.success('分享成功')
-      })
-      .catch(error => {
-        console.log(error.response.config.data)
-      }) 
   }
   
   const batchMoveAll = (items:object) => {
