@@ -60,9 +60,10 @@ instance.interceptors.response.use(response => {
         }
         
         break;
-      case 400:  case 403:
-        window.$message.error(response.data.error_description || '出错了')
+      // case 400:  case 403:
+      //   window.$message.error(response.data.error_description || '出错了')
       default:
+        window.$message.error(response?.data?.error_description || '出错了')
         break;
     }
   }
