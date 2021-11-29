@@ -79,9 +79,10 @@ import http from '../utils/axios'
 import { NForm, NFormItem, NButton, NInput, NCollapse, NCollapseItem, NSpace, NSwitch, useDialog, NAlert, NLog, NIcon } from 'naive-ui'
 import { ZoomQuestion } from '@vicons/tabler'
 const logs = ref([
+  '手机注册登陆',
   '添加推广下载',
   '绑定Telegram',
-  '直接分享功能',
+  '直接分享功能（下线）',
   '修改传输自动请求方式',
   '传输只显示保存中',
   '自定义菜单',
