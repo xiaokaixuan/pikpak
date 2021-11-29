@@ -48,6 +48,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('../views/login.vue'),
   },
   {
+    path: '/sms',
+    name: 'sms',
+    component: () => import('../views/sms.vue'),
+  },
+  {
     path: '/register',
     name: 'register',
     component: () => import('../views/register.vue'),

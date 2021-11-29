@@ -11,7 +11,7 @@
       <div class="login-box">
         <n-form label-align="left" style="padding-top: 30px;" :model="loginData" :rules="rules" ref="formRef" label-placement="left" label-width="0" class="login-form">
           <n-form-item path="email">
-            <n-input v-model:value="loginData.email" placeholder="请输入邮箱"></n-input>
+            <n-input v-model:value="loginData.phone_number" placeholder="请输入区号加手机号如+8615113254562"></n-input>
           </n-form-item>
           <n-form-item path="verification_code">
             <n-input-group>
@@ -19,33 +19,35 @@
               <n-button @click="sendCode" :disabled="time < 60" :loading="codeLoading">{{ time >= 60 ? '发送验证码' : ('重新发送 ' + time + 's')}}</n-button>
             </n-input-group>
           </n-form-item>
-          <n-form-item path="name">
-            <n-input v-model:value="loginData.name" placeholder="请输入用户名"></n-input>
-          </n-form-item>
-          <n-form-item path="password">
-            <n-input v-model:value="loginData.password" placeholder="请输入密码" type="password" show-password-on="mousedown"></n-input>
-          </n-form-item>
-          <n-form-item path="password1">
-            <n-input  :disabled="!loginData.password" v-model:value="loginData.password1" placeholder="请再次输入密码" @keyup.enter="register" type="password" show-password-on="mousedown"></n-input>
-          </n-form-item>
-          <n-form-item label="">
+          <n-form-item label="" v-if="isUser">
             <n-checkbox v-model:checked="invite">接受邀请获得10天vip</n-checkbox>
           </n-form-item>
           <n-form-item>
-            <n-button type="primary" class="block" :loading="loading" @click="register">注册</n-button>
-          </n-form-item>
-          <n-form-item label="">
-            <router-link to="/login" class="forget-password">已有账号？点击登录</router-link>
+            <n-button type="primary" class="block" :loading="loading" @click="register">登录</n-button>
           </n-form-item>
         </n-form>
-        <n-tooltip >
-          <template #trigger>
-            <n-icon color="#306eff" :size="32" class="google-tips">
-              <brand-google></brand-google>
-            </n-icon>
-          </template>
-          APP内谷歌登录的账号请先通过忘记密码设置密码后登录
-        </n-tooltip>
+        <div class="login-other">
+          <n-space inline>
+            <n-tooltip >
+              <template #trigger>
+                <router-link to="login">
+                  <n-icon color="#306eff" :size="32">
+                   <mail></mail>
+                  </n-icon>
+                </router-link>
+              </template>
+              邮箱登陆
+            </n-tooltip>
+            <n-tooltip >
+              <template #trigger>
+                <n-icon color="#306eff" :size="32">
+                  <brand-google></brand-google>
+                </n-icon>
+              </template>
+              APP内谷歌登录的账号请先通过忘记密码设置密码后登录
+            </n-tooltip>
+          </n-space>
+        </div>
       </div>
     </div>
   </div>
@@ -53,63 +55,27 @@
 
 <script setup lang='ts'>
 import { ref } from '@vue/reactivity';
-import { NForm, NFormItem, NInput, NButton, useMessage, NAlert, useDialog, NTooltip, NIcon, NInputGroup, FormRules, NCheckbox } from 'naive-ui'
+import { NForm, NFormItem, NInput, NButton, useMessage, NAlert, useDialog, NTooltip, NIcon, NInputGroup, FormRules, NCheckbox, NSpace } from 'naive-ui'
 import http from '../utils/axios'
 import { useRouter } from 'vue-router'
-import { BrandGoogle } from '@vicons/tabler'
+import { BrandGoogle, Mail } from '@vicons/tabler'
 import {  onUnmounted } from '@vue/runtime-core'
 import axios from 'axios';
 const loginData = ref({
-  email: '',
-  password: '',
-  password1: '',
-  name: '',
+  phone_number: '',
   verification_code: '',
   captcha_token: '',
   verification_id: ''
 })
 const formRef = ref()
-const validatePasswordSame = (rule:any, value:string) => {
-  return !value || value === loginData.value.password
-}
 const invite = ref(false)
 const rules:FormRules = {
-  email: [
-    { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '请输入邮箱', trigger: 'blur' },
-  ],
-  password: [
-    { required: true, message: '请输入密码',  trigger: 'blur'},
-    {
-      min: 6,
-      max: 16,
-      message: '16位密码使用字母数字和符号混合',
-      trigger: 'blur'
-    },
-    {
-      type: 'pattern',
-      pattern: /^(?:(?=.*[a-zA-Z])(?=.*[\d])|(?=.*[!#+,.\\=:=@-])(?=.*[\d])|(?=.*[!#+,.\\=:=@-])(?=.*[a-zA-Z])).+$/g,
-      message: '6-16位密码使用字母数字和符号混合',
-      trigger: 'blur'
-    },
-  ],
-  password1: [
-    { required: true, message: '请再次输入密码', trigger: 'blur' },
-    {
-      validator: validatePasswordSame,
-      message: '两次密码输入不一致',
-      trigger: 'blur'
-    }
-  ],
-  name: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
+  phone_number: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
   ],
   verification_code: [
     { required: true, message: '请输入验证码', trigger: 'blur' },
   ],
-}
-const changeEmail = (value:string) => {
-  console.log(value)
 }
 const codeLoading  = ref(false)
 const loading = ref(false)
@@ -127,14 +93,14 @@ const randomString = () =>  {
     return character;
 }
 const deviceId = randomString()
-const initCaptcha = (uid?:string) => {
+const initCaptcha = (action?:string) => {
   return http.post('https://user.mypikpak.com/v1/shield/captcha/init?client_id=YNxT9w7GMdWvEOKa', {
-    action: loginData.value.captcha_token ? 'POST:/v1/auth/signup': "POST:/v1/auth/verification",
+    action: action || "POST:/v1/auth/verification",
     captcha_token: loginData.value.captcha_token || '',
     client_id: "YNxT9w7GMdWvEOKa",
     device_id: deviceId,
     meta: {
-      "email": loginData.value.email,
+      "phone_number": loginData.value.phone_number,
     },
     redirect_uri: "xlaccsdk01://xunlei.com/callback?state\u003dharbor"
   })
@@ -144,24 +110,25 @@ const initCaptcha = (uid?:string) => {
       }
     })
 }
+const isUser = ref(false)
 const sendCode = () => {
-  if(!loginData.value.email) {
+  if(!loginData.value.phone_number) {
     return false
   } else {
     loginData.value.captcha_token = ''
     codeLoading.value = true
-    initCaptcha()
+    initCaptcha("POST:/v1/auth/verification")
       .then(() => {
         http.post('https://user.mypikpak.com/v1/auth/verification?client_id=YNxT9w7GMdWvEOKa', {
           captcha_token: loginData.value.captcha_token,
           client_id: "YNxT9w7GMdWvEOKa",
-          email: loginData.value.email,
+          phone_number: loginData.value.phone_number,
           locale: "zh-cn",
           target: "ANY",
-          // phone_number
         })
         .then((res:any) => {
           loginData.value.verification_id = res.data.verification_id
+          isUser.value = res.data.is_user || false
           coutdown()
         })
         .finally(() => {
@@ -192,39 +159,46 @@ const register = (e:Event) => {
   formRef.value.validate((errors:any)=>{
     if(!errors) {
       loading.value = true
-        http.post('https://user.mypikpak.com/v1/auth/verification/verify?client_id=YNxT9w7GMdWvEOKa', {
-          client_id: "YNxT9w7GMdWvEOKa",
-          verification_id: loginData.value.verification_id,
-          verification_code: loginData.value.verification_code
-        }).then((res:any) => {
-          initCaptcha()
-            .then(() => {
-              http.post('https://user.mypikpak.com/v1/auth/signup?client_id=YNxT9w7GMdWvEOKa', {
-                captcha_token: loginData.value.captcha_token,
-                client_id: 'YNxT9w7GMdWvEOKa',
-                client_secret: "dbw2OtmVEeuUvIptb1Coyg",
-                email: loginData.value.email,//username
-                name: loginData.value.name,
-                password: loginData.value.password,
-                verification_token: res.data.verification_token
+      http.post('https://user.mypikpak.com/v1/auth/verification/verify?client_id=YNxT9w7GMdWvEOKa', {
+        client_id: "YNxT9w7GMdWvEOKa",
+        verification_id: loginData.value.verification_id,
+        verification_code: loginData.value.verification_code
+      }).then((res:any) => {
+        initCaptcha(isUser.value ? 'POST:/v1/auth/signin': 'POST:/v1/auth/signup')
+          .then(() => {
+            let url = 'https://user.mypikpak.com/v1/auth/signup'
+            let data:any = {
+              captcha_token: loginData.value.captcha_token,
+              client_id: 'YNxT9w7GMdWvEOKa',
+              client_secret: "dbw2OtmVEeuUvIptb1Coyg",
+              verification_token: res.data.verification_token
+            }
+            if(isUser.value) {
+              url = 'https://user.mypikpak.com/v1/auth/signin'
+              data.username = loginData.value.phone_number
+            } else {
+              data.phone_number = loginData.value.phone_number
+              data.password = ''
+              data.name = 'U_' + loginData.value.phone_number.slice(-4)
+            }
+            http.post(url, data)
+              .then((res:any) => {
+                if(invite.value && !isUser.value) {
+                  vipInvite(res.data)
+                }
+                window.localStorage.setItem('pikpakLogin', JSON.stringify(res.data))
+                window.localStorage.removeItem('pikpakLoginData')
+                message.success('登录成功')
+                router.push('/')
               })
-                .then((res:any) => {
-                  if(invite.value) {
-                    vipInvite(res.data)
-                  }
-                  window.localStorage.setItem('pikpakLogin', JSON.stringify(res.data))
-                  window.localStorage.removeItem('pikpakLoginData')
-                  message.success('注册成功')
-                  router.push('/')
-                })
-                .catch((err:any) => {
-                  loading.value = false
-                })
-            })
-        })
-          .catch((err:any) => {
-            loading.value = false
+              .catch((err:any) => {
+                loading.value = false
+              })
           })
+      })
+        .catch((err:any) => {
+          loading.value = false
+        })
     }
     
   })
@@ -236,11 +210,6 @@ const vipInvite = (loginData:any) => {
       }
     })
       .then((res:any) => {
-        // if(res.data.invited_days) {
-        //   window.$message.success('恭喜您，您已成功增加' + res.data.invited_days + '天')
-        // } else {
-        //   window.$message.error('您已经邀请过了')
-        // }
       })
 }
 onUnmounted(() => {
@@ -320,6 +289,12 @@ onUnmounted(() => {
     bottom: 15px;
     left: 50%;
     margin-left: -16px;
+  }
+
+  .login-box .login-other {
+    margin-top: -50px;
+    text-align: center;
+    padding-bottom: 10px;
   }
   @media(max-width: 968px) {
     .login-page {
