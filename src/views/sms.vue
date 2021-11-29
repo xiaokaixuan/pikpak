@@ -19,7 +19,7 @@
               <n-button @click="sendCode" :disabled="time < 60" :loading="codeLoading">{{ time >= 60 ? '发送验证码' : ('重新发送 ' + time + 's')}}</n-button>
             </n-input-group>
           </n-form-item>
-          <n-form-item label="" v-if="isUser">
+          <n-form-item label="" v-if="!isUser">
             <n-checkbox v-model:checked="invite">接受邀请获得10天vip</n-checkbox>
           </n-form-item>
           <n-form-item>
