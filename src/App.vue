@@ -1,7 +1,9 @@
 <script setup lang="ts">
   import { ref } from '@vue/reactivity';
+import { onMounted } from '@vue/runtime-core';
   import { GlobalThemeOverrides, NConfigProvider, NMessageProvider, zhCN, dateZhCN, NDialogProvider, NNotificationProvider } from 'naive-ui'
-import MessageContent from './components/MessageContent.vue';
+  import MessageContent from './components/MessageContent.vue';
+  import { version, proxy } from './config'
   const themeOverrides = ref<GlobalThemeOverrides>({
     common: {
       primaryColor: '#306eff',
@@ -24,6 +26,12 @@ import MessageContent from './components/MessageContent.vue';
     Upload: {
       itemColorHover: '#F3F3F5FF',
       itemTextColorSuccess: '#18A058FF',
+    }
+  })
+  onMounted(() => {
+    const isSettingProxy = localStorage.getItem('isSettingProxy')
+    if(!isSettingProxy) {
+      localStorage.setItem('proxy', JSON.stringify(proxy))
     }
   })
 </script>

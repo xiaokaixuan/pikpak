@@ -8,7 +8,7 @@ const routes: Array<RouteRecordRaw> = [
     redirect: '/list',
     beforeEnter: (to, from, next) => {
       const pikpakLogin = JSON.parse(window.localStorage.getItem('pikpakLogin') || '{}')
-      if(!pikpakLogin || !pikpakLogin.access_token) {
+      if((!pikpakLogin || !pikpakLogin.access_token) && to.name !== 'setting') {
        next('/login')
       } else {
         next()

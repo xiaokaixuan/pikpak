@@ -9,8 +9,10 @@ instance.interceptors.request.use(request => {
   if (pikpakLogin.access_token) {
     request.headers['Authorization'] = `${pikpakLogin.token_type || 'Bearer'} ${pikpakLogin.access_token}`
   }
-  if(request.url?.indexOf('https://cors.z7.workers.dev') === -1) {
-    request.url = 'https://cors.z7.workers.dev/' + request.url
+  const proxyArray = JSON.parse(window.localStorage.getItem('proxy') || '[]')
+  if (proxyArray.length > 0) {
+    const index = Math.floor((Math.random() * proxyArray.length))
+    request.url = proxyArray[index] + '/' + request.url
   }
   return request
 })
@@ -78,8 +80,10 @@ instance2.interceptors.request.use(request => {
     'Notion-Version': '2021-08-16',
     'Content-Type': 'application/json'
   }
-  if(request.url?.indexOf('https://cors.z7.workers.dev') === -1) {
-    request.url = 'https://cors.z7.workers.dev/' + request.url
+  const proxyArray = JSON.parse(window.localStorage.getItem('proxy') || '[]')
+  if (proxyArray.length > 0) {
+    const index = Math.floor((Math.random() * proxyArray.length))
+    request.url = proxyArray[index] + '/' + request.url
   }
   return request
 })

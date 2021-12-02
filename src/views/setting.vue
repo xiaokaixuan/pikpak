@@ -1,6 +1,6 @@
 <template>
   <div class="list-page">
-    <n-collapse :default-expanded-names="['-1', '0', '2']">
+    <n-collapse :default-expanded-names="['-1', '0', '2', '3']">
       <n-collapse-item name="-1" >
         <template #header>
           绑定telegram   <a @click.stop="" href="https://www.tjsky.net/?p=220#Telegram" target="_blank"> <n-icon style="vertical-align: middle;" size="20" color="#d03050"><zoom-question></zoom-question></n-icon> </a>
@@ -55,6 +55,12 @@
           </n-form-item>
         </n-form>
       </n-collapse-item>
+      <n-collapse-item name="3" title="代理设置">
+        <n-input type="textarea" v-model:value="proxyData" rows="4" placeholder="支持多个随机，一行一个，为空则不代理"></n-input>
+        <p></p>
+        <n-button type="primary" @click="proxyPost">保存设置</n-button>
+        <n-text @click="proxyReset">恢复默认</n-text>
+      </n-collapse-item>
       <n-collapse-item title="关于" name="2">
         <n-space>
           <a href="https://mypikpak.com/" target="_blank" class="n-button">官方网站</a>
@@ -78,6 +84,7 @@ import { onMounted } from '@vue/runtime-core';
 import http from '../utils/axios'
 import { NForm, NFormItem, NButton, NInput, NCollapse, NCollapseItem, NSpace, NSwitch, useDialog, NAlert, NLog, NIcon } from 'naive-ui'
 import { ZoomQuestion } from '@vicons/tabler'
+import {proxy as proxyDefault} from '../config'
 const logs = ref([
   '手机注册登陆',
   '添加推广下载',
@@ -145,6 +152,16 @@ const loginPost = () => {
     window.localStorage.removeItem('pikpakLoginData')
   }
 }
+const proxyData = ref('')
+const proxyPost = () => {
+  window.localStorage.setItem('proxy', JSON.stringify(proxyData.value))
+  window.localStorage.setItem('isSettingProxy', 'true')
+}
+const proxyReset = () => {
+  window.localStorage.setItem('proxy', JSON.stringify(proxyDefault))
+  window.localStorage.removeItem('isSettingProxy')
+  proxyData.value = proxyDefault.join('\n')
+}
 onMounted(() => {
   let aria2 = JSON.parse(window.localStorage.getItem('pikpakAria2') || '{}')
   if(aria2.dir === undefined) {
@@ -157,6 +174,10 @@ onMounted(() => {
   if(login.username && login.password) {
     loginData.value = login
     loginSwitch.value = true 
+  }
+  let proxy = JSON.parse(window.localStorage.getItem('proxy') || '[]')
+  if(proxy.length) {
+    proxyData.value = proxy.join('\n')
   }
 })
 const telegramUrl = ref()
