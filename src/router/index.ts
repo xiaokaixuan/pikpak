@@ -43,6 +43,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('../views/test.vue')
   },
   {
+    path: '/s/:id/:password?',
+    name: 'shareInfo',
+    component: () => import('../views/shareInfo.vue'),
+  },
+  {
     path: '/login',
     name: 'login',
     component: () => import('../views/login.vue'),

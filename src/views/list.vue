@@ -816,7 +816,7 @@ import axios from 'axios';
       .catch(error => console.error('Error:', error))
   }
   const scrollHandle = (e:any) =>  {
-    if(e.target.offsetHeight - e.target.scrollTop < 30) {
+    if(e.target.offsetHeight + e.target.scrollTop >= e.target.scrollHeight - 30) {
       if(pageToken.value && !loading.value) {
         getFileList()
       }
