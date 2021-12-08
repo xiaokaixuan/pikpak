@@ -154,7 +154,8 @@ const loginPost = () => {
 }
 const proxyData = ref('')
 const proxyPost = () => {
-  window.localStorage.setItem('proxy', JSON.stringify(proxyData.value))
+  let proxyValue = proxyData.value.split('\n')
+  window.localStorage.setItem('proxy', JSON.stringify(proxyValue))
   window.localStorage.setItem('isSettingProxy', 'true')
 }
 const proxyReset = () => {
