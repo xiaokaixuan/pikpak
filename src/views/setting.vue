@@ -143,9 +143,9 @@ const loginPost = () => {
       positiveText: '确定',
       negativeText: '不确定',
       onPositiveClick: () => {
+        window.localStorage.setItem('pikpakLoginData', JSON.stringify(loginData.value))
       },
       onNegativeClick: () => {
-        window.localStorage.setItem('pikpakLoginData', JSON.stringify(loginData.value))
       },
     })
   } else {
