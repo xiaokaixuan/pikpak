@@ -446,7 +446,7 @@ import axios from 'axios';
     if(route.name != 'list') {
       filters['mime_type'] = {"prefix": String(route.name) + '/'}
     }
-    let parent_id = route.name !== 'list' ? '*' : route.query.id
+    let parent_id = route.name !== 'list' ? '*' : route.params.id
     http.get('https://api-drive.mypikpak.com/drive/v1/files', {
       params: {
         parent_id: parent_id,
