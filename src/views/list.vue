@@ -435,16 +435,26 @@ import axios from 'axios';
   const pageToken = ref()
   const getFileList = () => {
     loading.value = true
+    let filters:any = {
+        "phase": {"eq": "PHASE_TYPE_COMPLETE"},
+        "trashed":{"eq":false},
+        // "created_time"
+        // "modified_time"
+        // "kind":{"eq":"drive#folder"},
+        // "mime_type":{"prefix":"video/"},
+    }
+    if(route.name != 'list') {
+      filters['mime_type'] = {"prefix": String(route.name) + '/'}
+    }
+    let parent_id = route.name !== 'list' ? '*' : route.query.id
     http.get('https://api-drive.mypikpak.com/drive/v1/files', {
       params: {
-        parent_id: route.params.id,
+        parent_id: parent_id,
         thumbnail_size: 'SIZE_LARGE',
         with_audit: true,
         page_token: pageToken.value || undefined,
-        filters: {
-          "phase": {"eq": "PHASE_TYPE_COMPLETE"},
-          "trashed":{"eq":false}
-        }
+        limit: 100,
+        filters: filters
       }
     })
       .then((res:any) => {
@@ -468,7 +478,7 @@ import axios from 'axios';
     pageToken.value = ''
     getFileList()
     parentInfo.value = {}
-    if(route.params.id) {
+    if(route.params.id && route.params.id !== '*') {
       getFile(String(route.params.id))
         .then(res => {
           parentInfo.value = res.data
