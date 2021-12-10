@@ -211,7 +211,7 @@
           <n-form-item label="链接">
             <n-input-group>
               <n-input :value="fileInfo?.web_content_link"></n-input>
-              <n-button type="primary" @clik="copy(fileInfo.web_content_link)">复制</n-button>
+              <n-button type="primary" @click="copy(fileInfo.web_content_link)">复制</n-button>
             </n-input-group>
           </n-form-item>
         </n-form>
