@@ -9,10 +9,12 @@ instance.interceptors.request.use(request => {
   if (pikpakLogin.access_token) {
     request.headers['Authorization'] = `${pikpakLogin.token_type || 'Bearer'} ${pikpakLogin.access_token}`
   }
-  const proxyArray = JSON.parse(window.localStorage.getItem('proxy') || '[]')
-  if (proxyArray.length > 0) {
-    const index = Math.floor((Math.random() * proxyArray.length))
-    request.url = proxyArray[index] + '/' + request.url
+  if(request.url?.indexOf('https://', 4) === -1) {
+    const proxyArray = JSON.parse(window.localStorage.getItem('proxy') || '[]')
+    if (proxyArray.length > 0) {
+      const index = Math.floor((Math.random() * proxyArray.length))
+      request.url = proxyArray[index] + '/' + request.url
+    }
   }
   return request
 })
