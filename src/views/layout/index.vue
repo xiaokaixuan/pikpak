@@ -90,7 +90,7 @@
 import { ref } from '@vue/reactivity';
 import { h, onMounted, watch } from '@vue/runtime-core';
 import { NLayout, NLayoutSider, NLayoutContent, NMenu, MenuOption, NIcon, NProgress, NText, NModal, NCard, NInput, NButton, NScrollbar, NTime, NTooltip, useDialog } from 'naive-ui'
-import { File, Trash, CircleX, Logout, Settings, Copy, Video, Camera } from '@vicons/tabler'
+import { File, Trash, CircleX, Logout, Settings, Copy, Share, Video, Camera } from '@vicons/tabler'
 import http from '../../utils/axios'
 import { byteConvert } from '../../utils'
 import { useRoute, useRouter } from 'vue-router'
@@ -126,11 +126,11 @@ import { useRoute, useRouter } from 'vue-router'
       key: 'invited',
       icon: renderIcon(Copy)
     },
-    // {
-    //   label: '资源库',
-    //   key: 'share',
-    //   icon: renderIcon(Share)
-    // },
+    {
+      label: '资源库',
+      key: 'share',
+      icon: renderIcon(Share)
+    },
     {
       label: '设置',
       key: 'setting',
