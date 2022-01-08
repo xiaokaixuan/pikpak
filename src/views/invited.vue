@@ -97,7 +97,8 @@ const isFirstInvite = computed(() => {
 })
 const typeList = ref({
   vip_rebate: '会员分成',
-  invite_reward: '邀请奖励'
+  invite_reward: '邀请奖励',
+  relation: '邀请关系',
 })
 // 获取当用户的邀请详情
 const queryUserInvitationInfo = async () => {
