@@ -114,6 +114,9 @@ const isUser = ref(false)
 const sendCode = () => {
   if(!loginData.value.phone_number) {
     return false
+  } else if(loginData.value.phone_number.indexOf('+') === -1) {
+    message.error('请输入区号加手机号如+8615113254562')
+    return false
   } else {
     loginData.value.captcha_token = ''
     codeLoading.value = true
