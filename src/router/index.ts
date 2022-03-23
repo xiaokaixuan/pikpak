@@ -44,13 +44,18 @@ const routes: Array<RouteRecordRaw> = [
         path: 'invited',
         name: 'invited',
         component: () => import('../views/invited.vue')
-      },
+      }
       // {
       //   path: 'share',
       //   name: 'share',
       //   component: () => import('../views/share.vue')
       // }
     ]
+  },,
+  {
+    path: '/landing',
+    name: 'landing',
+    component: () => import('../views/landing.vue')
   },
   {
     path: '/t/:id?',
