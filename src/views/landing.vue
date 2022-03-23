@@ -199,7 +199,7 @@
   <div class="landing-bg" v-else>
     <div class="landing">
       <header class="payment-header">
-        <a href="/all" class>
+        <a href="./" class>
           <svg class="logo-svg" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
               opacity="0.985601"
