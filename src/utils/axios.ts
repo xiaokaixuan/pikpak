@@ -60,7 +60,7 @@ instance.interceptors.response.use(response => {
             }, 100)
           })
         } else {
-          router.push('/login?redirect=' + router.currentRoute.value.fullPath)
+          router.push('/login')
           return Promise.reject(error)
         }
         
