@@ -177,8 +177,9 @@ import { useRoute, useRouter } from 'vue-router'
   const code = ref()
   const showCode = ref(false)
   const postCode = () => {
-    http.post('https://api-drive.mypikpak.com/vip/v1/order/free', {
-      activation_code: code.value
+    http.post('https://api-drive.mypikpak.com/vip/v1/order/activation-code', {
+      activation_code: code.value,
+      data: {}
     })
       .then(res => {
         window.$message.success('兑换成功')
