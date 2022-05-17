@@ -60,7 +60,7 @@ instance.interceptors.response.use(response => {
           })
         } else {
           router.push('/login')
-          return false
+          return Promise.reject(error)
         }
         
         break;

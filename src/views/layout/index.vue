@@ -12,7 +12,7 @@
       bordered
     >
       <a href="https://mypikpak.com/" target="_blank" class="logo-box">
-        <img src="https://www.mypikpak.com/logo.png" class="logo-box__icon" alt="">
+        <img src="https://mypikpak.com/apple-touch-icon.png" class="logo-box__icon" alt="">
         <div class="logo-box__text">PikPak</div>
       </a>
       <n-menu :options="menuOptions" :value="String(route.name)" @update:value="goRoute"></n-menu>
@@ -177,8 +177,9 @@ import { useRoute, useRouter } from 'vue-router'
   const code = ref()
   const showCode = ref(false)
   const postCode = () => {
-    http.post('https://api-drive.mypikpak.com/vip/v1/order/free', {
-      activation_code: code.value
+    http.post('https://api-drive.mypikpak.com/vip/v1/order/activation-code', {
+      activation_code: code.value,
+      data: {}
     })
       .then(res => {
         window.$message.success('兑换成功')
