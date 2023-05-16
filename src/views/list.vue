@@ -503,7 +503,7 @@ import axios from 'axios';
         with_audit: true,
         page_token: pageToken.value || undefined,
         limit: 100,
-        filters: filters
+        filters: JSON.stringify(filters)
       }
     })
       .then((res:any) => {
@@ -985,10 +985,10 @@ import axios from 'axios';
         thumbnail_size: 'SIZE_LARGE',
         with_audit: true,
         page_token: page || undefined,
-        filters: {
+        filters: JSON.stringify({
           "phase": {"eq": "PHASE_TYPE_COMPLETE"},
           "trashed":{"eq":false}
-        }
+        })
       }
     })
     const {files, next_page_token} = res.data

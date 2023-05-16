@@ -147,10 +147,10 @@ import { CircleX, CornerUpLeftDouble } from '@vicons/tabler'
         thumbnail_size: 'SIZE_LARGE',
         with_audit: true,
         page_token: pageToken.value || undefined,
-        filters: {
+        filters: JSON.stringify({
           "phase": {"eq": "PHASE_TYPE_COMPLETE"},
-          "trashed":{"eq":true}
-        }
+          "trashed": {"eq": true}
+        })
       }
     })
       .then((res:any) => {
