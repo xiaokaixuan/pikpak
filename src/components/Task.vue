@@ -69,9 +69,9 @@ import { CircleX } from '@vicons/tabler'
     http.get('https://api-drive.mypikpak.com/drive/v1/tasks', {
       params: {
         type: 'offline',
-        filters: {
+        filters: JSON.stringify({
           "phase": {"eq": "PHASE_TYPE_RUNNING"}
-        },
+        }),
         page_token: pageToken.value || undefined,
         thumbnail_size: 'SIZE_LARGE',
         with: 'reference_resource'
