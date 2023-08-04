@@ -73,7 +73,7 @@ async function handleRequest(event) {
           // 发起 fetch
           let fr = (await fetch(url, fp));
           outCt = fr.headers.get('content-type');
-          if(outCt.includes('application/text') || outCt.includes('text/html')) {
+          if(outCt && (outCt.includes('application/text') || outCt.includes('text/html'))) {
             try {
               // 添加base
               let newFr = new HTMLRewriter()
@@ -88,6 +88,9 @@ async function handleRequest(event) {
               fr = newFr
             } catch(e) {
             }
+          }
+          for (const [key, value] of fr.headers.entries()) {
+              outHeaders.set(key, value);
           }
           outStatus = fr.status;
           outStatusText = fr.statusText;
